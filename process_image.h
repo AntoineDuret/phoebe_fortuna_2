@@ -8,6 +8,7 @@
 #define PXTOCM					1486.0f //pixel * cm --> Distance = h * D_lense / width  (D_lense est une constante) donc PXTOCM = h (2cm) * D_lense (772.55 pxl)
 #define WIDTH_SLOPE				10 //pixel (before 5)
 #define MIN_LINE_WIDTH			150
+#define GOAL_DIST_MIN			8
 #define MAX_DISTANCE			13.0f //cm
 
 
