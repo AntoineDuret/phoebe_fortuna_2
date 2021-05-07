@@ -25,13 +25,13 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 /* Returns the line width extracted from the image buffer given
 * Returns 0 if line not found
 */
-uint16_t extract_line_width(uint8_t *buffer) {
+void extract_line_width(uint8_t *buffer) { //uint16_t
 
 	volatile uint16_t i = 0, begin = 0, end = 0, width = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
 
-	static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
+	//static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
 
 	//performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++){
@@ -78,22 +78,22 @@ uint16_t extract_line_width(uint8_t *buffer) {
 	} while(wrong_line);
 
 	if(line_not_found) {
-		begin = 0;
-		end = 0;
-		width = last_width;
+		//begin = 0;
+		//end = 0;
+		//width = last_width;
 		line_found = FALSE;
 	} else {
 		line_found = TRUE;
-		last_width = width = (end-begin);
-		line_position = (begin + end)/2;
+		//last_width = width = (end-begin);
+		//line_position = (begin + end)/2;
 	}
 
-	//sets a maximum width or returns the measured width
+	/*//sets a maximum width or returns the measured width
 	if((PXTOCM/width) > MAX_DISTANCE){
 		return PXTOCM/MAX_DISTANCE;
 	} else {
 		return width;
-	}
+	}*/
 }
 
 static THD_WORKING_AREA(waCaptureImage, 256);
@@ -132,7 +132,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
 	uint16_t lineWidth = 0;
 
-	bool send_to_computer = true;
+	//bool send_to_computer = true;
 
     while(1) {
     	//waits until an image has been captured
@@ -151,11 +151,11 @@ static THD_FUNCTION(ProcessImage, arg) {
   		if(lineWidth)
   			distance_cm = PXTOCM/lineWidth;
 
-  		if(send_to_computer) {
+/*  		if(send_to_computer) {
   		  	SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
   		  	//chprintf((BaseSequentialStream *)&SDU1, "Distance = %f\n", get_distance_cm());
   		}
-  		send_to_computer = ! send_to_computer;
+  		send_to_computer = ! send_to_computer;*/
 
     }
 }

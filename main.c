@@ -147,7 +147,7 @@ int main(void) {
     while(1) {
         if(nbPlayers == 0) {
         	nbPlayers = game_setting();
-        	//player_voice_config();
+        	player_voice_config();
         	tabPlayers[nbPlayers] = game_running();
         }
 
@@ -293,7 +293,7 @@ void player_voice_config(void) {
 *	Returns the time for the player
 */
 uint game_running(void) {
-	/*set_led(LED1, 1);
+	set_led(LED1, 1);
 	set_led(LED3, 1);
 	set_led(LED5, 1);
 	set_led(LED7, 1);
@@ -306,15 +306,15 @@ uint game_running(void) {
 	chThdSleepMilliseconds(750);
 	set_led(LED1, 0);
 	statusAudioCommand(TRUE);
-    statusObstDetection(TRUE); */
+    statusObstDetection(TRUE);
 
     while (!verify_finish_line()) {
-    	//set_front_led(1);
-    	//set_body_led(1);
-    	chThdSleepMilliseconds(200);
+    	chThdSleepMilliseconds(600);
     }
-    //statusAudioCommand(FALSE);
-    //statusObstDetection(FALSE);
+    statusAudioCommand(FALSE);
+    statusObstDetection(FALSE);
+    left_motor_set_speed(0);
+    right_motor_set_speed(0);
 	return 8;
 }
 
