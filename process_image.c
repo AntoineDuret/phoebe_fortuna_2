@@ -27,7 +27,7 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 */
 void extract_line_width(uint8_t *buffer) { //uint16_t
 
-	volatile uint16_t i = 0, begin = 0, end = 0, width = 0;
+	volatile uint16_t i = 0, begin = 0, end = 0; // width = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
 
@@ -179,15 +179,16 @@ void process_image_start(void){
 
 bool verify_finish_line(void) {
 	//chprintf((BaseSequentialStream *)&SD3, "Distance = %d\r", VL53L0X_get_dist_mm()); //SDU1
-	 if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
+	bool goal_detected = FALSE;
+	if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
 		  //chprintf((BaseSequentialStream *)&SD3, "line testing"); //SDU1
-		 /*if(line_found) {
-
-		 	 set_body_led(1);
+		 if(line_found) {
+			 goal_detected = TRUE;
+			 set_body_led(1);
 			 chThdSleepMilliseconds(400);
 			 set_body_led(0);
 			 chThdSleepMilliseconds(400);
-		 }*/
+		 }
 	 }
-	return line_found;
+	return goal_detected;
 }

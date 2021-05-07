@@ -18,7 +18,7 @@
 static bool obstacle_det = FALSE;
 //static proximity_msg_t prox_values;
 
-static THD_WORKING_AREA(prox_sens_thd_wa, 256);
+static THD_WORKING_AREA(prox_sens_thd_wa, 512);
 static THD_FUNCTION(prox_sens_thd, arg) {
 	(void) arg;
     chRegSetThreadName(__FUNCTION__);
