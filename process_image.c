@@ -118,6 +118,7 @@ static THD_FUNCTION(CaptureImage, arg) {
 		//chprintf((BaseSequentialStream *)&SDU1, "capture time = %d\n", chVTGetSystemTime()-time); //cable USB doit etre branché, sinon il restera stuck ici source: Antoine Duret
 		//signals an image has been captured
 		chBSemSignal(&image_ready_sem);
+		//chThdSleepMilliseconds(200);
     }
 }
 
@@ -178,15 +179,15 @@ void process_image_start(void){
 
 bool verify_finish_line(void) {
 	//chprintf((BaseSequentialStream *)&SD3, "Distance = %d\r", VL53L0X_get_dist_mm()); //SDU1
-	 if(VL53L0X_get_dist_mm() <= 150) {
+	 if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
 		  //chprintf((BaseSequentialStream *)&SD3, "line testing"); //SDU1
-		 if(line_found) {
-			// chprintf((BaseSequentialStream *)&SD3, "line found"); //SDU1
+		 /*if(line_found) {
+
 		 	 set_body_led(1);
 			 chThdSleepMilliseconds(400);
 			 set_body_led(0);
 			 chThdSleepMilliseconds(400);
-		 }
+		 }*/
 	 }
 	return line_found;
 }
