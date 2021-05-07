@@ -85,7 +85,7 @@ static void timer12_start(void) {
     gptStartContinuous(&GPTD12, 0xFFFF);
 }
 
-// Thread for players configurations & selector management
+/*// Thread for players configurations & selector management
 static THD_WORKING_AREA(selector_thd_wa, 2048);
 static THD_FUNCTION(selector_thd, arg) {
     (void)arg;
@@ -99,7 +99,7 @@ static THD_FUNCTION(selector_thd, arg) {
     	LED_selector_management(get_selector());
     	chThdSleepUntilWindowed(time, time + MS2ST(100)); // refresh @ 10 Hz
     }
-}
+}*/
 
 
 int main(void) {
@@ -181,12 +181,18 @@ uint8_t game_setting(void) {
 
 	// Ready to start the player configuration and selector management
 	set_body_led(1);
-	chThdCreateStatic(selector_thd_wa, sizeof(selector_thd_wa), NORMALPRIO, selector_thd, NULL);
+	//chThdCreateStatic(selector_thd_wa, sizeof(selector_thd_wa), NORMALPRIO, selector_thd, NULL);
 
+	uint8_t i = 0;
 	// Wait for the user to select the number of players
 	do {
 		selector_state = get_selector();
-		chThdSleepMilliseconds(2500);
+		do {
+			LED_selector_management(get_selector());
+			chThdSleepMilliseconds(100);
+			i++;
+		} while (i < 25);
+		i = 0;
 	} while((selector_state != get_selector()) || (get_selector() == 0));
 	set_body_led(0);
 	chThdSleepMilliseconds(1000);
