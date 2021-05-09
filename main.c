@@ -139,6 +139,7 @@ int main(void) {
     process_image_start();
 
     uint8_t nbPlayers = 0;
+    uint8_t currentPlayer = 0;
     uint tabPlayers[NB_PLAYERS_MAX];
 
     //chThdCreateStatic(selector_thd_wa, sizeof(selector_thd_wa), NORMALPRIO, selector_thd, NULL);
@@ -147,11 +148,45 @@ int main(void) {
     while(1) {
         if(nbPlayers == 0) {
         	nbPlayers = game_setting();
-        	player_voice_config();
-        	tabPlayers[nbPlayers] = game_running();
+        	currentPlayer = nbPlayers;
+        	while(currentPlayer != 0) {
+        		currentPlayer--;
+        		player_voice_config();
+        		tabPlayers[currentPlayer] = game_running();
+        		chprintf((BaseSequentialStream *)&SD3, "Current Player: %d,  time = %d\n", currentPlayer, tabPlayers[currentPlayer]); // SD3 -> bluetooth & SDU1 -> USB
+
+        		set_body_led(1);
+        		if(currentPlayer > 0) {
+        			// Wait till next player is ready  // add wait for x seconds till confirmation set
+        			while(get_selector() != currentPlayer) {
+        				chThdSleepMilliseconds(100);
+        				LED_selector_management(get_selector());
+        			}
+        			// Confirm selector state
+        			set_body_led(0);
+        			chThdSleepMilliseconds(1000);
+            		set_body_led(1);
+            		chThdSleepMilliseconds(1000);
+            		set_body_led(0);
+        		} else {
+        			for(uint8_t i = 1; i < nbPlayers; i++) {
+        				if(tabPlayers[i] < tabPlayers[currentPlayer])
+        					currentPlayer = i;
+        			}
+        			LED_selector_management(currentPlayer + 1);
+        			chprintf((BaseSequentialStream *)&SD3, "Fastest Player: %d,  time = %d\n", currentPlayer, tabPlayers[currentPlayer]); // SD3 -> bluetooth & SDU1 -> USB
+        			set_body_led(1);
+        			currentPlayer = 0;
+        		}
+        	}
+
         }
 
-        chThdSleepMilliseconds(1000);
+        chThdSleepMilliseconds(5000);
+        while(get_selector() != 0) {
+        	chThdSleepMilliseconds(100);
+        }
+        nbPlayers = 0;
     }
 }
 
@@ -299,6 +334,7 @@ void player_voice_config(void) {
 *	Returns the time for the player
 */
 uint game_running(void) {
+	systime_t time;
 	set_led(LED1, 1);
 	set_led(LED3, 1);
 	set_led(LED5, 1);
@@ -313,15 +349,16 @@ uint game_running(void) {
 	set_led(LED1, 0);
 	statusAudioCommand(TRUE);
     statusObstDetection(TRUE);
-
+    time = chVTGetSystemTime();
     while (!verify_finish_line()) {
     	chThdSleepMilliseconds(600);
     }
+    time = chVTGetSystemTime() - time;
     statusAudioCommand(FALSE);
     statusObstDetection(FALSE);
     left_motor_set_speed(0);
     right_motor_set_speed(0);
-	return 8;
+	return time;
 }
 
 /*
