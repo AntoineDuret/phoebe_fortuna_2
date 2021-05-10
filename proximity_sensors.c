@@ -13,6 +13,7 @@
 #include "leds.h"
 #include <motors.h>
 #include <audio_processing.h>
+#include <process_image.h>
 //#include <process_image.h>
 
 static bool obstacle_det = FALSE;
@@ -45,6 +46,7 @@ void statusObstDetection(bool status) {
 void obstacle_detection(void) {
 	// Stop e-puck
 	statusAudioCommand(FALSE);
+	statusGoalDetection(FALSE);
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 	// Stop obstacle detection
@@ -71,7 +73,7 @@ void obstacle_detection(void) {
 	right_motor_set_speed(0);
 
     // Wait 2 seconds additionally as penalty
-    chThdSleepMilliseconds(2000);
+    chThdSleepMilliseconds(3000);
 
     // Turn off LEDs to indicate that player can continue to play
     set_led(LED1,0);
@@ -81,6 +83,7 @@ void obstacle_detection(void) {
 
     // Turn on audio command and & obstacle detection
     statusAudioCommand(TRUE);
+    statusGoalDetection(TRUE);
     chThdSleepMilliseconds(2000); // Uncomment for 2s  till obstacle detection is turned on again
 	obstacle_det = TRUE;
 }

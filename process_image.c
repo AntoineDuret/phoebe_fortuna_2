@@ -16,6 +16,7 @@
 static float distance_cm = 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2; //middle
 static bool line_found = FALSE;
+static bool goal_detection = FALSE;
 
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
@@ -180,15 +181,21 @@ void process_image_start(void){
 bool verify_finish_line(void) {
 	//chprintf((BaseSequentialStream *)&SD3, "Distance = %d\r", VL53L0X_get_dist_mm()); //SDU1
 	bool goal_detected = FALSE;
-	if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
-		  //chprintf((BaseSequentialStream *)&SD3, "line testing"); //SDU1
-		 if(line_found) {
-			 goal_detected = TRUE;
-			 set_body_led(1);
-			 chThdSleepMilliseconds(400);
-			 set_body_led(0);
-			 chThdSleepMilliseconds(400);
-		 }
-	 }
+	if(goal_detection) {
+		if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
+			//chprintf((BaseSequentialStream *)&SD3, "line testing"); //SDU1
+			if(line_found) {
+				goal_detected = TRUE;
+				set_body_led(1);
+				chThdSleepMilliseconds(400);
+				set_body_led(0);
+				chThdSleepMilliseconds(400);
+			}
+		}
+	}
 	return goal_detected;
+}
+
+void statusGoalDetection(bool status) {
+	goal_detection = status;
 }

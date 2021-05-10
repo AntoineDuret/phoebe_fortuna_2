@@ -281,6 +281,7 @@ void player_voice_calibration(float* data) {
 
 		// Reset the average_freq to 0 for next calibration.
 		average_freq = 0;
+		ind_sample = 0;
 	}
 }
 

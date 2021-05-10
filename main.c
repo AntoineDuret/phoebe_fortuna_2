@@ -339,23 +339,26 @@ uint game_running(void) {
 	set_led(LED3, 1);
 	set_led(LED5, 1);
 	set_led(LED7, 1);
-	chThdSleepMilliseconds(750);
+	chThdSleepMilliseconds(1000);
 	set_led(LED3, 0);
-	chThdSleepMilliseconds(750);
+	chThdSleepMilliseconds(1000);
 	set_led(LED5, 0);
-	chThdSleepMilliseconds(750);
+	chThdSleepMilliseconds(1000);
 	set_led(LED7, 0);
-	chThdSleepMilliseconds(750);
+	chThdSleepMilliseconds(1000);
 	set_led(LED1, 0);
 	statusAudioCommand(TRUE);
     statusObstDetection(TRUE);
+    statusGoalDetection(TRUE);
     time = chVTGetSystemTime();
+
     while (!verify_finish_line()) {
-    	chThdSleepMilliseconds(600);
+    	chThdSleepMilliseconds(200);
     }
     time = chVTGetSystemTime() - time;
     statusAudioCommand(FALSE);
     statusObstDetection(FALSE);
+    statusGoalDetection(FALSE);
     left_motor_set_speed(0);
     right_motor_set_speed(0);
 	return time;
