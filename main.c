@@ -151,12 +151,13 @@ int main(void) {
         	currentPlayer = nbPlayers;
         	while(currentPlayer != 0) {
         		currentPlayer--;
-        		player_voice_config();
+        		//player_voice_config();
         		tabPlayers[currentPlayer] = game_running();
-        		chprintf((BaseSequentialStream *)&SD3, "Current Player: %d,  time = %d\n", currentPlayer, tabPlayers[currentPlayer]); // SD3 -> bluetooth & SDU1 -> USB
 
         		set_body_led(1);
         		if(currentPlayer > 0) {
+        			positionningGoal();
+
         			// Wait till next player is ready  // add wait for x seconds till confirmation set
         			while(get_selector() != currentPlayer) {
         				chThdSleepMilliseconds(100);
@@ -174,7 +175,7 @@ int main(void) {
         					currentPlayer = i;
         			}
         			LED_selector_management(currentPlayer + 1);
-        			chprintf((BaseSequentialStream *)&SD3, "Fastest Player: %d,  time = %d\n", currentPlayer, tabPlayers[currentPlayer]); // SD3 -> bluetooth & SDU1 -> USB
+        			chprintf((BaseSequentialStream *)&SD3, "Fastest Player: %d,   = %d\n", currentPlayer, tabPlayers[currentPlayer]); // SD3 -> bluetooth & SDU1 -> USB
         			set_body_led(1);
         			currentPlayer = 0;
         		}
@@ -353,14 +354,9 @@ uint game_running(void) {
     time = chVTGetSystemTime();
 
     while (!verify_finish_line()) {
-    	chThdSleepMilliseconds(200);
+    	chThdSleepMilliseconds(200); //
     }
     time = chVTGetSystemTime() - time;
-    statusAudioCommand(FALSE);
-    statusObstDetection(FALSE);
-    statusGoalDetection(FALSE);
-    left_motor_set_speed(0);
-    right_motor_set_speed(0);
 	return time;
 }
 

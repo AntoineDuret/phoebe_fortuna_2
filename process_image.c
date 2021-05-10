@@ -3,8 +3,11 @@
 #include <chprintf.h>
 #include <usbcfg.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <main.h>
+#include "sensors/proximity.h"
+#include "motors.h"
 #include "camera/po8030.h"
 #include "sensors/VL53L0X/VL53L0X.h"
 
@@ -22,17 +25,16 @@ static bool goal_detection = FALSE;
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 
 
-
 /* Returns the line width extracted from the image buffer given
 * Returns 0 if line not found
 */
-void extract_line_width(uint8_t *buffer) { //uint16_t
+uint16_t extract_line_width(uint8_t *buffer) {
 
-	volatile uint16_t i = 0, begin = 0, end = 0; // width = 0;
+	volatile uint16_t i = 0, begin = 0, end = 0, width = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
 
-	//static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
+	static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
 
 	//performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++){
@@ -79,22 +81,22 @@ void extract_line_width(uint8_t *buffer) { //uint16_t
 	} while(wrong_line);
 
 	if(line_not_found) {
-		//begin = 0;
-		//end = 0;
-		//width = last_width;
+		begin = 0;
+		end = 0;
+		width = last_width;
 		line_found = FALSE;
 	} else {
 		line_found = TRUE;
-		//last_width = width = (end-begin);
-		//line_position = (begin + end)/2;
+		last_width = width = (end-begin);
+		line_position = (begin + end)/2;
 	}
 
-	/*//sets a maximum width or returns the measured width
+	//sets a maximum width or returns the measured width
 	if((PXTOCM/width) > MAX_DISTANCE){
 		return PXTOCM/MAX_DISTANCE;
 	} else {
 		return width;
-	}*/
+	}
 }
 
 static THD_WORKING_AREA(waCaptureImage, 256);
@@ -134,7 +136,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
 	uint16_t lineWidth = 0;
 
-	//bool send_to_computer = true;
+	bool send_to_computer = true;
 
     while(1) {
     	//waits until an image has been captured
@@ -148,16 +150,16 @@ static THD_FUNCTION(ProcessImage, arg) {
    		}
 
   		//search for line in the image and gets its width in pixels
-  		//lineWidth =
+  		lineWidth = extract_line_width(image);
   		extract_line_width(image);
   		if(lineWidth)
   			distance_cm = PXTOCM/lineWidth;
 
-/*  		if(send_to_computer) {
+  		if(send_to_computer) {
   		  	SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
   		  	//chprintf((BaseSequentialStream *)&SDU1, "Distance = %f\n", get_distance_cm());
   		}
-  		send_to_computer = ! send_to_computer;*/
+  		send_to_computer = ! send_to_computer;
 
     }
 }
@@ -186,6 +188,11 @@ bool verify_finish_line(void) {
 			//chprintf((BaseSequentialStream *)&SD3, "line testing"); //SDU1
 			if(line_found) {
 				goal_detected = TRUE;
+				statusAudioCommand(FALSE);
+				statusObstDetection(FALSE);
+				statusGoalDetection(FALSE);
+				left_motor_set_speed(0);
+				right_motor_set_speed(0);
 				set_body_led(1);
 				chThdSleepMilliseconds(400);
 				set_body_led(0);
@@ -198,4 +205,72 @@ bool verify_finish_line(void) {
 
 void statusGoalDetection(bool status) {
 	goal_detection = status;
+}
+
+
+void positionningGoal(void) {
+	messagebus_topic_t *prox_topic = messagebus_find_topic_blocking(&bus, "/proximity");
+	proximity_msg_t prox_values;
+	int16_t leftSpeed = 0, rightSpeed = 0;
+	systime_t time;
+
+	time = chVTGetSystemTime();
+	while ((chVTGetSystemTime() - time < 10000) || line_found == FALSE) {
+		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
+		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
+		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
+		right_motor_set_speed(rightSpeed);
+		left_motor_set_speed(leftSpeed);
+		chThdSleepUntilWindowed(time, time + MS2ST(10)); // Refresh @ 100 Hz.
+	}
+
+	float distance, error = 0, sum_error = 0;
+	int16_t speed = 0, speed_correction = 0;
+
+	error = get_distance_cm() - GOAL_DISTANCE;
+
+	while (error < ERROR_THRESHOLD) {
+		sum_error += error;
+		//we set a maximum and a minimum for the sum to avoid an uncontrolled growth
+		if(sum_error > MAX_SUM_ERROR_LINE) {
+			sum_error = MAX_SUM_ERROR_LINE;
+		} else if(sum_error < - MAX_SUM_ERROR_LINE) {
+					sum_error = - MAX_SUM_ERROR_LINE;
+		}
+
+		//computes a correction factor to let the robot rotate to be in front of the line
+
+		speed_correction = (get_line_position() - (IMAGE_BUFFER_SIZE/2));
+
+		//if the line is nearly in front of the camera, don't rotate
+		if(abs(speed_correction) < ROTATION_THRESHOLD){
+			speed_correction = 0;
+		}
+
+		speed = KP_LINE * error + KI_LINE * sum_error;
+
+		//applies the speed from the PI regulator and the correction for the rotation
+		right_motor_set_speed(speed - ROTATION_COEFF * speed_correction);
+		left_motor_set_speed(speed + ROTATION_COEFF * speed_correction);
+
+		//100Hz
+		chThdSleepUntilWindowed(time, time + MS2ST(10));
+		error = get_distance_cm() - GOAL_DISTANCE;
+	}
+
+	left_motor_set_speed(0);
+	right_motor_set_speed(0);
+
+	left_motor_set_pos(0);
+	right_motor_set_pos(0);
+
+	left_motor_set_speed(600);
+	right_motor_set_speed(-600);
+
+	while(abs(right_motor_get_pos()) <= (PERIMETER_EPUCK * NSTEP_ONE_TURN/4 / WHEEL_PERIMETER)) {
+		chThdSleepMilliseconds(100);
+	}
+
+	left_motor_set_speed(0);
+	right_motor_set_speed(0);
 }

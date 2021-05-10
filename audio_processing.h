@@ -6,7 +6,6 @@
 
 // Frequency domain parameters & FFT parameters
 #define FFT_SIZE 				1024
-#define	ERROR_THRESHOLD			0.1f 				// to have a straight movement
 #define MIN_VALUE_THRESHOLD		10000				// to avoid noisy effects
 #define MID_FREQ				15
 #define MIN_FREQ				8
