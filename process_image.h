@@ -4,12 +4,12 @@
 #include <stdbool.h>
 
 #define IMAGE_BUFFER_SIZE		640
-#define GOAL_DISTANCE			23.0f //cm
+#define GOAL_DISTANCE			26.5f //cm
 #define PXTOCM					1486.0f //pixel * cm --> Distance = h * D_lense / width  (D_lense est une constante) donc PXTOCM = h (2cm) * D_lense (772.55 pxl)
 #define WIDTH_SLOPE				10 //pixel (before 5)
 #define MIN_LINE_WIDTH			165
 #define GOAL_DIST_MIN			100
-#define MAX_DISTANCE			13.0f //cm
+#define MAX_DISTANCE			30.0f //cm
 #define MOTOR_SPEED_LIMIT		1100
 #define KP_LINE					800.0f
 #define KI_LINE					3.5f	//must not be zero

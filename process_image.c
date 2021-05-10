@@ -215,21 +215,21 @@ void positionningGoal(void) {
 	systime_t time;
 
 	time = chVTGetSystemTime();
-	while ((chVTGetSystemTime() - time < 10000) || line_found == FALSE) {
+	while ((chVTGetSystemTime() - time < 10000) || (line_found == FALSE) || (VL53L0X_get_dist_mm() > 350)) {
 		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
 		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
 		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
 		right_motor_set_speed(rightSpeed);
 		left_motor_set_speed(leftSpeed);
-		chThdSleepUntilWindowed(time, time + MS2ST(10)); // Refresh @ 100 Hz.
+		chThdSleepUntilWindowed(time, time + MS2ST(30)); // Refresh @ 100 Hz.
 	}
 
-	float distance, error = 0, sum_error = 0;
+	/*float distance, error = 0, sum_error = 0;
 	int16_t speed = 0, speed_correction = 0;
 
 	error = get_distance_cm() - GOAL_DISTANCE;
 
-	while (error < ERROR_THRESHOLD) {
+	while (error > ERROR_THRESHOLD) {
 		sum_error += error;
 		//we set a maximum and a minimum for the sum to avoid an uncontrolled growth
 		if(sum_error > MAX_SUM_ERROR_LINE) {
@@ -256,7 +256,7 @@ void positionningGoal(void) {
 		//100Hz
 		chThdSleepUntilWindowed(time, time + MS2ST(10));
 		error = get_distance_cm() - GOAL_DISTANCE;
-	}
+	}*/
 
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
