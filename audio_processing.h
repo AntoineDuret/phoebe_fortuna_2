@@ -1,19 +1,19 @@
 #ifndef AUDIO_PROCESSING_H
 #define AUDIO_PROCESSING_H
 
-#define GAME_SPEED				1100 				// speed of the motors (max 1100)
-#define NB_SAMPLES				40		//max 256			// samples for voice calibration
+#define GAME_SPEED				1100 	// speed of the motors (max 1100)
+#define NB_SAMPLES				40		// samples for voice calibration (max 256)
 
 // Frequency domain parameters & FFT parameters
 #define FFT_SIZE 				1024
-#define MIN_VALUE_THRESHOLD		10000				// to avoid noisy effects
+#define MIN_VALUE_THRESHOLD		10000	// to avoid noisy effects
 #define MID_FREQ				15
 #define MIN_FREQ				8
 #define MAX_FREQ				22
 #define HALF_BW					5
-#define	ERROR_THRESHOLD		0.1f
+#define	ERROR_THRESHOLD			0.1f
 
-// PID regulator parameters
+// PID regulator parameters (tuned manually)
 #define KP 						200.0f
 #define KD						2.0f
 #define KI 						2.25f
@@ -25,6 +25,7 @@ typedef enum {
 	RIGHT_CMPLX_INPUT,
 	FRONT_CMPLX_INPUT,
 	BACK_CMPLX_INPUT,
+
 	// Arrays containing the computed magnitude of the complex numbers
 	LEFT_OUTPUT,
 	RIGHT_OUTPUT,
@@ -34,18 +35,19 @@ typedef enum {
 
 
 void mic_input_start(void);
-void sound_remote(float* data);
 void processAudioData(int16_t *data, uint16_t num_samples);
 void wait_send_to_computer(void);
 float* get_audio_buffer_ptr(BUFFER_NAME_t name);
 
-/*
- * NEW FUNCTIONS DEFINED
- */
+
+/*======================================================================================*/
+/* 								NEW FUNCTIONS DEFINED									*/
+/*======================================================================================*/
+void player_voice_calibration(float* data);
+void sound_remote(float* data);
 void statusAudioCommand(bool status);
 void statusVoiceCalibration(bool status);
 bool getStatusVoiceCalibration(void);
-void player_voice_calibration(float* data);
 
 
 #endif /* AUDIO_PROCESSING_H */

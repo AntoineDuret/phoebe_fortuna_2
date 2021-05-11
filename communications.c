@@ -1,3 +1,6 @@
+/*======================================================================================*/
+/* 							THIS CODE WAS REUSED FROM THE TP5							*/
+/*======================================================================================*/
 #include "ch.h"
 #include "hal.h"
 #include <main.h>
@@ -9,20 +12,18 @@
 *	Puts 0 to the imaginary part. Size is the number of complex numbers.
 *	=> data should be of size (2 * size)
 */
-uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_t size){
-
+uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_t size) {
 	volatile uint8_t c1, c2;
 	volatile uint16_t temp_size = 0;
 	uint16_t i=0;
 
 	uint8_t state = 0;
-	while(state != 5){
-
+	while(state != 5) {
         c1 = chSequentialStreamGet(in);
 
-        //State machine to detect the string EOF\0S in order synchronize
-        //with the frame received
-        switch(state){
+        // State machine to detect the string EOF\0S in order synchronize
+        // with the frame received
+        switch(state) {
         	case 0:
         		if(c1 == 'S')
         			state = 1;
@@ -57,7 +58,6 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
         		else
         			state = 0;
         }
-        
 	}
 
 	c1 = chSequentialStreamGet(in);
@@ -73,11 +73,10 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
 			c1 = chSequentialStreamGet(in);
 			c2 = chSequentialStreamGet(in);
 
-			data[i*2] = (int16_t)((c1 | c2<<8));	        //real
-			data[(i*2)+1] = 0;				//imaginary
+			data[i*2] = (int16_t)((c1 | c2<<8));	// real
+			data[(i*2)+1] = 0;						// imaginary
 		}
 	}
 
 	return temp_size/2;
-
 }

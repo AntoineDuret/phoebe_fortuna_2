@@ -1,20 +1,29 @@
-#include "ch.h"
-#include "hal.h"
-#include <main.h>
-#include <usbcfg.h>
-#include <chprintf.h>
-
-#include <motors.h>
-#include <audio/microphone.h>
-#include <audio_processing.h>
-#include <communications.h>
-#include <fft.h>
 #include <arm_math.h>
+
+#include "ch.h"
+#include "chprintf.h"
+#include "hal.h"
+
+#include "audio_processing.h"
+#include "communications.h"
+#include "fft.h"
+#include "main.h"
+#include "process_image.h"
+#include "proximity_sensors.h"
+
+#include "audio/microphone.h"
+#include "motors.h"
+#include "usbcfg.h"
+
 #include "chbsem.h"
 
-//debugg
-#include "leds.h"
+#include "leds.h" // /!\ Debug
 
+
+/*======================================================================================*/
+/* 						 	     REUSED CODE FROM THE TP5				    			*/
+/* 						  (with small additions and corrections)						*/
+/*======================================================================================*/
 
 // Semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);  // @suppress("Field cannot be resolved")
@@ -35,8 +44,9 @@ static bool audio_command_on = 0;
 static bool voice_calibration_on = 0;
 static uint8_t mid_freq = MID_FREQ;
 
+
 // Thread for microphone input
-static THD_WORKING_AREA(micInput_thd_wa, 2048); // watch taille pour ce thread et autre thread gestion de selcteur
+static THD_WORKING_AREA(micInput_thd_wa, 2048); 		// /!\ watch taille pour ce thread et autre thread gestion de selcteur
 static THD_FUNCTION(micInput_thd, arg) {
     (void)arg;
     chRegSetThreadName(__FUNCTION__);
@@ -45,7 +55,8 @@ static THD_FUNCTION(micInput_thd, arg) {
       	float* bufferCmplxInput = get_audio_buffer_ptr(LEFT_CMPLX_INPUT);
         float* bufferOutput = get_audio_buffer_ptr(LEFT_OUTPUT);
 
-        uint16_t size = ReceiveInt16FromComputer((BaseSequentialStream *) &SD3, bufferCmplxInput, FFT_SIZE);
+        uint16_t size = ReceiveInt16FromComputer((BaseSequentialStream *) &SD3,
+        													bufferCmplxInput, FFT_SIZE);
 
         if(size == FFT_SIZE) {
             /*   Optimized FFT   */
@@ -55,70 +66,13 @@ static THD_FUNCTION(micInput_thd, arg) {
             chSysUnlock();
         }
 
-        chThdSleepMilliseconds(100); // capteurs 100 Hz, PID 10Hz,
+        chThdSleepMilliseconds(100); // sensors 100 Hz, PID 10Hz,
     }
 }
 
 
 void mic_input_start(void) {
 	chThdCreateStatic(micInput_thd_wa, sizeof(micInput_thd_wa), NORMALPRIO, micInput_thd, NULL);
-}
-
-
-/*
-*	Simple function used to detect the highest value in a buffer
-*	and to execute a motor command depending on it
-*/
-void sound_remote(float* data) {
-	float error = 0;
-	float max_norm = MIN_VALUE_THRESHOLD;
-	int16_t max_norm_index = -1;
-
-	float speed = 0;
-	static float sum_error = 0;
-	static float previous_error = 0;
-	float deriv_error = 0;
-
-	// Search for the highest peak
-	for(uint16_t i = mid_freq - HALF_BW ; i <= mid_freq + HALF_BW ; i++) {
-		if(data[i] > max_norm) {
-			max_norm = data[i];
-			max_norm_index = i;
-		}
-	}
-
-	// PID regulator implementation for fine audio control
-	if((max_norm_index == -1) || (audio_command_on == 0)) {
-		left_motor_set_speed(0);
-		right_motor_set_speed(0);
-		sum_error = 0;
-	} else {
-		error = max_norm_index - mid_freq;
-		sum_error += error;
-		deriv_error = error - previous_error;
-		previous_error = error;
-
-		if(abs(sum_error) > MAX_SUM_ERROR) {
-			if(sum_error > 0)
-				sum_error = MAX_SUM_ERROR;
-			else sum_error = - MAX_SUM_ERROR;
-		}
-
-		speed = KP * error + KI * sum_error + KD * deriv_error;
-
-		// Peak at a lower frequency than middle frequency : turn left / higher : turn right
-		if(abs(error) < ERROR_THRESHOLD) {
-			left_motor_set_speed(GAME_SPEED);
-			right_motor_set_speed(GAME_SPEED);
-			sum_error = 0;
-		} else if(error < 0) {
-			left_motor_set_speed(GAME_SPEED + speed);
-			right_motor_set_speed(GAME_SPEED);
-		} else {
-			left_motor_set_speed(GAME_SPEED);
-			right_motor_set_speed(GAME_SPEED - speed);
-		}
-	}
 }
 
 
@@ -133,9 +87,8 @@ void sound_remote(float* data) {
 */
 void processAudioData(int16_t *data, uint16_t num_samples) {
 	/*
-	*	We get 160 samples per mic every 10ms
-	*	So we fill the samples buffers to reach
-	*	1024 samples, then we compute the FFTs.
+	*	We get 160 samples per mic every 10 ms.
+	*	So we fill the samples buffers to reach 1024 samples, then we compute the FFTs.
 	*/
 	static uint16_t nb_samples = 0;
 
@@ -164,15 +117,15 @@ void processAudioData(int16_t *data, uint16_t num_samples) {
 
 	if(nb_samples >= (2 * FFT_SIZE)) {
 		/*
-		*	FFT processing
+		*	- FFT processing -
 		*	This FFT function stores the results in the input buffer given.
 		*	This is an "In Place" function. 
-		*	We use only the left microphone
+		*	We use only the left microphone.
 		*/
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
 
 		/*
-		*	Magnitude processing
+		*	- Magnitude processing -
 		*	Computes the magnitude of the complex numbers and stores them
 		*	in a buffer of FFT_SIZE because it only contains real numbers.
 		*/
@@ -234,21 +187,18 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name) {
 }
 
 
-void statusAudioCommand(bool status) {
-	audio_command_on = status;
-}
 
+/*======================================================================================*/
+/* 									 NEW FUNCTIONS										*/
+/*======================================================================================*/
 
-void statusVoiceCalibration(bool status) {
-	voice_calibration_on = status;
-}
-
-bool getStatusVoiceCalibration(void) {
-	return voice_calibration_on;
-}
-
-
-
+/*
+*	Function defined to do the voice calibration for each player before their game.
+*
+*	params :
+*	float* data			pointer to an array containing the computed magnitude of the cpx numbers
+*						for one mic
+*/
 void player_voice_calibration(float* data) {
 	float max_norm = MIN_VALUE_THRESHOLD;
 	int16_t max_norm_index = -1;
@@ -257,7 +207,7 @@ void player_voice_calibration(float* data) {
 
 	// Search for the highest peak
 	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++) {
-		if(data[i] > max_norm){
+		if(data[i] > max_norm) {
 			max_norm = data[i];
 			max_norm_index = i;
 		}
@@ -266,8 +216,8 @@ void player_voice_calibration(float* data) {
 	if((max_norm_index != -1) && (max_norm_index >= MIN_FREQ) && (max_norm_index <= MAX_FREQ)) {
 		average_freq += max_norm_index;
 		ind_sample++;
-
 	}
+
 	if(ind_sample == NB_SAMPLES) {
 		average_freq = (average_freq/ind_sample);
 		mid_freq = average_freq;
@@ -279,3 +229,82 @@ void player_voice_calibration(float* data) {
 	}
 }
 
+
+/*
+*	Simple function used to detect the highest value in a buffer and to execute a motor
+*	command depending on it. PID control for fine audio command.
+*
+*	params :
+*	float* data			pointer to an array containing the computed magnitude of the cpx numbers
+*						for one mic
+*/
+void sound_remote(float* data) {
+	float error = 0;
+	float speed = 0;
+
+	float max_norm = MIN_VALUE_THRESHOLD;
+	int16_t max_norm_index = -1;
+
+	static float sum_error = 0;
+	static float previous_error = 0;
+	float deriv_error = 0;
+
+	// Search for the highest peak
+	for(uint16_t i = mid_freq - HALF_BW ; i <= mid_freq + HALF_BW ; i++) {
+		if(data[i] > max_norm) {
+			max_norm = data[i];
+			max_norm_index = i;
+		}
+	}
+
+	// PID regulator implementation for fine audio control
+	if((max_norm_index == -1) || (audio_command_on == 0)) {
+		left_motor_set_speed(0);
+		right_motor_set_speed(0);
+		sum_error = 0;
+	} else {
+		error = max_norm_index - mid_freq;
+		sum_error += error;
+		deriv_error = error - previous_error;
+		previous_error = error;
+
+		if(abs(sum_error) > MAX_SUM_ERROR) {
+			if(sum_error > 0) {
+				sum_error = MAX_SUM_ERROR;
+			} else {
+				sum_error = - MAX_SUM_ERROR;
+			}
+		}
+
+		speed = KP * error + KI * sum_error + KD * deriv_error;
+
+		// Peak at a lower frequency than middle frequency : turn left / higher : turn right
+		if(abs(error) < ERROR_THRESHOLD) {
+			left_motor_set_speed(GAME_SPEED);
+			right_motor_set_speed(GAME_SPEED);
+			sum_error = 0;
+		} else if(error < 0) {
+			left_motor_set_speed(GAME_SPEED + speed);
+			right_motor_set_speed(GAME_SPEED);
+		} else {
+			left_motor_set_speed(GAME_SPEED);
+			right_motor_set_speed(GAME_SPEED - speed);
+		}
+	}
+}
+
+
+/*
+*	Three little functions to control the audio / allow the voice calibration.
+*/
+void statusAudioCommand(bool status) {
+	audio_command_on = status;
+}
+
+void statusVoiceCalibration(bool status) {
+	voice_calibration_on = status;
+}
+
+bool getStatusVoiceCalibration(void) {
+	return voice_calibration_on;
+}

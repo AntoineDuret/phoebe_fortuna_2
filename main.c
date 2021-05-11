@@ -6,7 +6,6 @@
 #include <arm_math.h>
 
 #include "ch.h"
-#include "chprintf.h"
 #include "hal.h"
 
 #include "audio_processing.h"
@@ -67,57 +66,66 @@ int main(void) {
 
     /* Infinite loop. */
     while(1) {
-        if(nbPlayers == 0) {
+    	if(nbPlayers == 0) {
         	nbPlayers = game_setting();
         	currentPlayer = nbPlayers;
+
+        	// Main update loop
         	while(currentPlayer != 0) {
         		currentPlayer--;
-        		player_voice_config(); //
+        		player_voice_config();
         		tabPlayers[currentPlayer] = game_running();
-
         		set_body_led(1);
+
         		if(currentPlayer > 0) {
         			positionningGoal();
 
-        			// Wait till next player is ready  // add wait for x seconds till confirmation set
+        			// Wait till next player is ready  						// add wait for x seconds till confirmation set
         			while(get_selector() != currentPlayer) {
         				chThdSleepMilliseconds(100);
-        				LED_selector_management(get_selector());
+        				led_selector_management(get_selector());
         			}
+
         			// Confirm selector state
-        			set_body_led(0);
-        			chThdSleepMilliseconds(1000);
-            		set_body_led(1);
-            		chThdSleepMilliseconds(1000);
-            		set_body_led(0);
-        		} else {
+        			body_led_confirm();
+
+        		} else { // Display the winner!
         			for(uint8_t i = 1; i < nbPlayers; i++) {
-        				if(tabPlayers[i] < tabPlayers[currentPlayer])
+        				if(tabPlayers[i] < tabPlayers[currentPlayer]) {
         					currentPlayer = i;
+        				}
         			}
-        			LED_selector_management(currentPlayer + 1);
+
+        			led_selector_management(currentPlayer + 1);
         			set_body_led(1);
         			currentPlayer = 0;
         		}
         	}
-
         }
 
         chThdSleepMilliseconds(5000);
+
         while(get_selector() != 0) {
         	chThdSleepMilliseconds(100);
         }
+
         nbPlayers = 0;
     }
 }
 
 
+
+/*======================================================================================*/
+/* 									 NEW FUNCTIONS										*/
+/*======================================================================================*/
+
 /*
 *	Function used to start a game configuration and manage the early LED
-*	communication with the user
+*	communication with the player (see the report, appendix A2).
 */
 uint8_t game_setting(void) {
-	uint8_t selector_state = 0; 												// vérifier cast ??
+	uint8_t selector_state = 0;
+	uint8_t i = 0;
 
 	// Waiting for the user to turn the game setting ON
 	while(get_selector() != 0) {
@@ -138,22 +146,20 @@ uint8_t game_setting(void) {
 	// Ready to start the player configuration and selector management
 	set_body_led(1);
 
-	uint8_t i = 0;
 	// Wait for the user to select the number of players
 	do {
 		selector_state = get_selector();
+
 		do {
-			LED_selector_management(get_selector());
+			led_selector_management(get_selector());
 			chThdSleepMilliseconds(100);
 			i++;
-		} while (i < 25);
+		} while(i < 25); 									// /!\ MAGIC NUMBER
+
 		i = 0;
 	} while((selector_state != get_selector()) || (get_selector() == 0));
-	set_body_led(0);
-	chThdSleepMilliseconds(1000);
-	set_body_led(1);
-	chThdSleepMilliseconds(1000);
-	set_body_led(0);
+
+	body_led_confirm();
 
 	return selector_state;
 }
@@ -161,9 +167,9 @@ uint8_t game_setting(void) {
 
 /*
 *	Simple function used to manage the desired LED display corresponding to a
-*	given selector position
+*	given selector position. Please see the report, appendix A4.
 */
-void LED_selector_management(int selector_pos) {
+void led_selector_management(int selector_pos) {
 	switch(selector_pos) {
 		case 0: // waiting state
 			set_player_led_configuration(FULL, 0, 0, 0);
@@ -232,32 +238,35 @@ void LED_selector_management(int selector_pos) {
 }
 
 
-
 /*
-*	Function to initialize all the settings before the game starts which are relevant for the player
-*	(voice calibration for player)
+*	Function to configure the mid frequency of a player before a game
+*	(voice calibration for player).
 */
 void player_voice_config(void) {
 	chThdSleepMilliseconds(500);
     set_front_led(1);
     statusVoiceCalibration(TRUE);
+
     while(getStatusVoiceCalibration()) {
     	chThdSleepMilliseconds(300);
     }
+
     set_front_led(0);
 }
 
+
 /*
 *	This function is active during the game. It comes to an end when the finish line is detected.
-*
-*	Returns the time for the player
+*	It returns the time taken by each player to complete the game.
 */
 uint game_running(void) {
 	systime_t time;
+
 	set_led(LED1, 1);
 	set_led(LED3, 1);
 	set_led(LED5, 1);
 	set_led(LED7, 1);
+
 	chThdSleepMilliseconds(1000);
 	set_led(LED3, 0);
 	chThdSleepMilliseconds(1000);
@@ -266,26 +275,31 @@ uint game_running(void) {
 	set_led(LED7, 0);
 	chThdSleepMilliseconds(1000);
 	set_led(LED1, 0);
+
 	statusAudioCommand(TRUE);
     statusObstDetection(TRUE);
     statusGoalDetection(TRUE);
+
     time = chVTGetSystemTime();
 
     while (!verify_finish_line()) {
-    	chThdSleepMilliseconds(200); //
+    	chThdSleepMilliseconds(200);
     }
+
     time = chVTGetSystemTime() - time;
+
 	return time;
 }
+
 
 /*
 *	Simple function used to show the LED ID of a player associated with a selector position
 *
 *	params :
-*	led_conf_name_t led_conf		one of the three RGB LED configurations defined
-*	uint8_t red_i					*
-*	uint8_t green_i					* values corresponding with one of the five RGB colors defined
-*	uint8_t blue_i					*
+*	led_conf_name_t led_conf	one of the three RGB LED configurations defined
+*	uint8_t red_i				*
+*	uint8_t green_i				* values corresponding with one of the five RGB colors defined
+*	uint8_t blue_i				*
 */
 void set_player_led_configuration(led_conf_name_t led_conf,
 										uint8_t red_i, uint8_t green_i, uint8_t blue_i) {
@@ -308,10 +322,21 @@ void set_player_led_configuration(led_conf_name_t led_conf,
 }
 
 
+/*
+*	Simple function defined to apply the abstraction and reuse principle.
+*	Desired display to confirm something to the player with the body led.
+*/
+void body_led_confirm(void) {
+	set_body_led(0);
+	chThdSleepMilliseconds(1000);
+	set_body_led(1);
+	chThdSleepMilliseconds(1000);
+	set_body_led(0);
+}
+
 #define STACK_CHK_GUARD 0xe2dee396
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
-void __stack_chk_fail(void)
-{
+void __stack_chk_fail(void) {
     chSysHalt("Stack smashing detected");
 }
