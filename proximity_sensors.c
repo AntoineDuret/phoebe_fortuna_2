@@ -73,7 +73,7 @@ void obstacle_detection(void) {
 	right_motor_set_speed(0);
 
     // Wait 2 seconds additionally as penalty
-    chThdSleepMilliseconds(3000);
+    chThdSleepMilliseconds(2000);
 
     // Turn off LEDs to indicate that player can continue to play
     set_led(LED1,0);

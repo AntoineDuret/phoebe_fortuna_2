@@ -11,6 +11,7 @@
 #define MIN_FREQ				8
 #define MAX_FREQ				22
 #define HALF_BW					5
+#define	ERROR_THRESHOLD		0.1f
 
 // PID regulator parameters
 #define KP 						200.0f

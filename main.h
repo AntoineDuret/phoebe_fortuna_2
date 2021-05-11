@@ -17,7 +17,7 @@ extern "C" {
 #define WHEEL_DISTANCE      5.1f    // cm 5.35
 #define PERIMETER_EPUCK     (PI * WHEEL_DISTANCE)
 #define WHEEL_PERIMETER     12.5f // [cm]
-#define	ERROR_THRESHOLD		0.1f
+
 
 
 // List of the RGB LED configurations

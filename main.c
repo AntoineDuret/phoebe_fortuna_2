@@ -85,22 +85,6 @@ static void timer12_start(void) {
     gptStartContinuous(&GPTD12, 0xFFFF);
 }
 
-/*// Thread for players configurations & selector management
-static THD_WORKING_AREA(selector_thd_wa, 2048);
-static THD_FUNCTION(selector_thd, arg) {
-    (void)arg;
-    chRegSetThreadName(__FUNCTION__);
-
-    systime_t time;
-    uint8_t stop_loop = 0;
-
-    while(stop_loop == 0) {
-    	time = chVTGetSystemTime();
-    	LED_selector_management(get_selector());
-    	chThdSleepUntilWindowed(time, time + MS2ST(100)); // refresh @ 10 Hz
-    }
-}*/
-
 
 int main(void) {
 	// System initialization
@@ -113,26 +97,17 @@ int main(void) {
 
     // Peripherals initialization
     clear_leds();
-	//set_body_led(0);
-	//set_front_led(0);
 	usb_start();			// starts the USB communication
 	dcmi_start();				// camera
 	po8030_start();			// camera
 	motors_init();			// motors
 	proximity_start();			// IR proximity detection
 	obstacle_det_start();
-	//battery_level_start();
-	//dac_start();
 	exti_start();
-	//imu_start();
-	//ir_remote_start();
 	spi_comm_start();
 	VL53L0X_start();			// ToF init
 	serial_start();			// starts the serial communication
-	//mic_start(NULL);
 	sdio_start();
-	//playMelodyStart();
-	//playSoundFileStart();
     timer12_start();		// starts timer 12
     mic_start(&processAudioData);
     mic_input_start();
@@ -142,8 +117,6 @@ int main(void) {
     uint8_t currentPlayer = 0;
     uint tabPlayers[NB_PLAYERS_MAX];
 
-    //chThdCreateStatic(selector_thd_wa, sizeof(selector_thd_wa), NORMALPRIO, selector_thd, NULL);
-
     /* Infinite loop. */
     while(1) {
         if(nbPlayers == 0) {
@@ -151,7 +124,7 @@ int main(void) {
         	currentPlayer = nbPlayers;
         	while(currentPlayer != 0) {
         		currentPlayer--;
-        		//player_voice_config();
+        		player_voice_config(); //
         		tabPlayers[currentPlayer] = game_running();
 
         		set_body_led(1);
@@ -175,7 +148,6 @@ int main(void) {
         					currentPlayer = i;
         			}
         			LED_selector_management(currentPlayer + 1);
-        			chprintf((BaseSequentialStream *)&SD3, "Fastest Player: %d,   = %d\n", currentPlayer, tabPlayers[currentPlayer]); // SD3 -> bluetooth & SDU1 -> USB
         			set_body_led(1);
         			currentPlayer = 0;
         		}
@@ -397,11 +369,3 @@ void __stack_chk_fail(void)
 {
     chSysHalt("Stack smashing detected");
 }
-
-void SendUint8ToComputer(uint8_t* data, uint16_t size)
-{
-	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)"START", 5);
-	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)&size, sizeof(uint16_t));
-	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)data, size);
-}
-

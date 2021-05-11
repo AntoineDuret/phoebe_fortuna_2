@@ -12,12 +12,12 @@
 #include "sensors/VL53L0X/VL53L0X.h"
 
 #include <process_image.h>
+#include <audio_processing.h>
+#include <proximity_sensors.h>
 
 //only for debugging
 #include "leds.h"
 
-static float distance_cm = 0;
-static uint16_t line_position = IMAGE_BUFFER_SIZE/2; //middle
 static bool line_found = FALSE;
 static bool goal_detection = FALSE;
 
@@ -28,13 +28,11 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 /* Returns the line width extracted from the image buffer given
 * Returns 0 if line not found
 */
-uint16_t extract_line_width(uint8_t *buffer) {
+void detectLine(uint8_t *buffer) {
 
-	volatile uint16_t i = 0, begin = 0, end = 0, width = 0;
+	volatile uint16_t i = 0, begin = 0, end = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
-
-	static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
 
 	//performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++){
@@ -81,21 +79,9 @@ uint16_t extract_line_width(uint8_t *buffer) {
 	} while(wrong_line);
 
 	if(line_not_found) {
-		begin = 0;
-		end = 0;
-		width = last_width;
 		line_found = FALSE;
 	} else {
 		line_found = TRUE;
-		last_width = width = (end-begin);
-		line_position = (begin + end)/2;
-	}
-
-	//sets a maximum width or returns the measured width
-	if((PXTOCM/width) > MAX_DISTANCE){
-		return PXTOCM/MAX_DISTANCE;
-	} else {
-		return width;
 	}
 }
 
@@ -134,9 +120,6 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
-	uint16_t lineWidth = 0;
-
-	bool send_to_computer = true;
 
     while(1) {
     	//waits until an image has been captured
@@ -150,32 +133,13 @@ static THD_FUNCTION(ProcessImage, arg) {
    		}
 
   		//search for line in the image and gets its width in pixels
-  		lineWidth = extract_line_width(image);
-  		extract_line_width(image);
-  		if(lineWidth)
-  			distance_cm = PXTOCM/lineWidth;
-
-  		if(send_to_computer) {
-  		  	SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
-  		  	//chprintf((BaseSequentialStream *)&SDU1, "Distance = %f\n", get_distance_cm());
-  		}
-  		send_to_computer = ! send_to_computer;
-
+  		detectLine(image);
     }
 }
 
 
 
-
-float get_distance_cm(void){
-	return distance_cm;
-}
-
-uint16_t get_line_position(void){
-	return line_position;
-}
-
-void process_image_start(void){
+void process_image_start(void) {
 	chThdCreateStatic(waProcessImage, sizeof(waProcessImage), NORMALPRIO, ProcessImage, NULL);
 	chThdCreateStatic(waCaptureImage, sizeof(waCaptureImage), NORMALPRIO, CaptureImage, NULL);
 }
@@ -214,8 +178,14 @@ void positionningGoal(void) {
 	int16_t leftSpeed = 0, rightSpeed = 0;
 	systime_t time;
 
+	left_motor_set_speed(0);
+	right_motor_set_speed(0);
+
+	// Turn left by 60°
+	turnLeftDegrees(60);
+
 	time = chVTGetSystemTime();
-	while ((chVTGetSystemTime() - time < 10000) || (line_found == FALSE) || (VL53L0X_get_dist_mm() > 350)) {
+	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > 160)) { // (chVTGetSystemTime() - time < 10000) ||
 		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
 		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
 		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
@@ -224,50 +194,60 @@ void positionningGoal(void) {
 		chThdSleepUntilWindowed(time, time + MS2ST(30)); // Refresh @ 100 Hz.
 	}
 
-	/*float distance, error = 0, sum_error = 0;
-	int16_t speed = 0, speed_correction = 0;
-
-	error = get_distance_cm() - GOAL_DISTANCE;
-
-	while (error > ERROR_THRESHOLD) {
-		sum_error += error;
-		//we set a maximum and a minimum for the sum to avoid an uncontrolled growth
-		if(sum_error > MAX_SUM_ERROR_LINE) {
-			sum_error = MAX_SUM_ERROR_LINE;
-		} else if(sum_error < - MAX_SUM_ERROR_LINE) {
-					sum_error = - MAX_SUM_ERROR_LINE;
-		}
-
-		//computes a correction factor to let the robot rotate to be in front of the line
-
-		speed_correction = (get_line_position() - (IMAGE_BUFFER_SIZE/2));
-
-		//if the line is nearly in front of the camera, don't rotate
-		if(abs(speed_correction) < ROTATION_THRESHOLD){
-			speed_correction = 0;
-		}
-
-		speed = KP_LINE * error + KI_LINE * sum_error;
-
-		//applies the speed from the PI regulator and the correction for the rotation
-		right_motor_set_speed(speed - ROTATION_COEFF * speed_correction);
-		left_motor_set_speed(speed + ROTATION_COEFF * speed_correction);
-
-		//100Hz
-		chThdSleepUntilWindowed(time, time + MS2ST(10));
-		error = get_distance_cm() - GOAL_DISTANCE;
-	}*/
-
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
+	// Go Forward 6cm
+	goForwardCM(6);
+
+	// Turn right for 75°
+	turnRightDegrees(75);
+
+	// Go Forward 28cm
+	goForwardCM(28);
+
+	// TURN right for 75°
+	turnRightDegrees(75);
+}
+
+void turnRightDegrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
 	left_motor_set_speed(600);
 	right_motor_set_speed(-600);
 
-	while(abs(right_motor_get_pos()) <= (PERIMETER_EPUCK * NSTEP_ONE_TURN/4 / WHEEL_PERIMETER)) {
+	while(abs(right_motor_get_pos()) <= (PERIMETER_EPUCK * NSTEP_ONE_TURN/360 / WHEEL_PERIMETER) * degrees) {
+		chThdSleepMilliseconds(100);
+	}
+
+	left_motor_set_speed(0);
+	right_motor_set_speed(0);
+}
+
+void turnLeftDegrees(uint8_t degrees) {
+	left_motor_set_pos(0);
+	right_motor_set_pos(0);
+
+	left_motor_set_speed(-600);
+	right_motor_set_speed(600);
+
+	while(abs(right_motor_get_pos()) <= (PERIMETER_EPUCK * NSTEP_ONE_TURN/360 / WHEEL_PERIMETER) * degrees) {
+		chThdSleepMilliseconds(100);
+	}
+
+	left_motor_set_speed(0);
+	right_motor_set_speed(0);
+}
+
+void goForwardCM(uint8_t cm) {
+	left_motor_set_pos(0);
+	right_motor_set_pos(0);
+
+	left_motor_set_speed(900);
+	right_motor_set_speed(900);
+
+	while(abs(right_motor_get_pos()) <= (cm * NSTEP_ONE_TURN / WHEEL_PERIMETER)) {
 		chThdSleepMilliseconds(100);
 	}
 
