@@ -167,21 +167,16 @@ void processAudioData(int16_t *data, uint16_t num_samples) {
 		*	FFT processing
 		*	This FFT function stores the results in the input buffer given.
 		*	This is an "In Place" function. 
+		*	We use only the left microphone
 		*/
-		//doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
-		//doFFT_optimized(FFT_SIZE, micFront_cmplx_input);
-		//doFFT_optimized(FFT_SIZE, micBack_cmplx_input);
 
 		/*
 		*	Magnitude processing
 		*	Computes the magnitude of the complex numbers and stores them
 		*	in a buffer of FFT_SIZE because it only contains real numbers.
 		*/
-		//arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
-		//arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
-		//arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
 
 		// Sends only one FFT result over 8 for 1 mic
 		if((voice_calibration_on)) {
@@ -258,7 +253,6 @@ void player_voice_calibration(float* data) {
 	float max_norm = MIN_VALUE_THRESHOLD;
 	int16_t max_norm_index = -1;
 	static uint16_t ind_sample = 0;
-	//static uint16_t ind_average[NB_SAMPLES];
 	static uint16_t average_freq = 0;
 
 	// Search for the highest peak

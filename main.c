@@ -189,7 +189,6 @@ uint8_t game_setting(void) {
 
 	// Ready to start the player configuration and selector management
 	set_body_led(1);
-	//chThdCreateStatic(selector_thd_wa, sizeof(selector_thd_wa), NORMALPRIO, selector_thd, NULL);
 
 	uint8_t i = 0;
 	// Wait for the user to select the number of players
@@ -293,7 +292,6 @@ void LED_selector_management(int selector_pos) {
 void player_voice_config(void) {
 	chThdSleepMilliseconds(500);
     set_front_led(1);
-    //chThdSleepMilliseconds(500);
     statusVoiceCalibration(TRUE);
     while(getStatusVoiceCalibration()) {
     	chThdSleepMilliseconds(300);

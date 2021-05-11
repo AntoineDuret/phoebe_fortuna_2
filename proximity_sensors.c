@@ -14,7 +14,6 @@
 #include <motors.h>
 #include <audio_processing.h>
 #include <process_image.h>
-//#include <process_image.h>
 
 static bool obstacle_det = FALSE;
 //static proximity_msg_t prox_values;
@@ -84,6 +83,6 @@ void obstacle_detection(void) {
     // Turn on audio command and & obstacle detection
     statusAudioCommand(TRUE);
     statusGoalDetection(TRUE);
-    chThdSleepMilliseconds(2000); // Uncomment for 2s  till obstacle detection is turned on again
+    chThdSleepMilliseconds(2000); // 2s  till obstacle detection is turned on again
 	obstacle_det = TRUE;
 }

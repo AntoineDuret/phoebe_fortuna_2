@@ -97,17 +97,13 @@ static THD_FUNCTION(CaptureImage, arg) {
 	dcmi_set_capture_mode(CAPTURE_ONE_SHOT);
 	dcmi_prepare();
 
-	//systime_t time;
 	while(1){
-		//time = chVTGetSystemTime();
         //starts a capture
 		dcmi_capture_start();
 		//waits for the capture to be done
 		wait_image_ready();
-		//chprintf((BaseSequentialStream *)&SDU1, "capture time = %d\n", chVTGetSystemTime()-time); //cable USB doit etre branché, sinon il restera stuck ici source: Antoine Duret
 		//signals an image has been captured
 		chBSemSignal(&image_ready_sem);
-		//chThdSleepMilliseconds(200);
     }
 }
 
@@ -128,7 +124,6 @@ static THD_FUNCTION(ProcessImage, arg) {
         img_buff_ptr = dcmi_get_last_image_ptr();
 
   		for(uint16_t i = 0; i < 2 * IMAGE_BUFFER_SIZE; i+=2) {
-   			//image[i/2] = ((uint8_t) img_buff_ptr[i+1] & 0x1F);	//blue
    			image[i/2] = ((uint8_t) img_buff_ptr[i] & 0xF8); //red
    		}
 
@@ -145,11 +140,9 @@ void process_image_start(void) {
 }
 
 bool verify_finish_line(void) {
-	//chprintf((BaseSequentialStream *)&SD3, "Distance = %d\r", VL53L0X_get_dist_mm()); //SDU1
 	bool goal_detected = FALSE;
 	if(goal_detection) {
 		if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
-			//chprintf((BaseSequentialStream *)&SD3, "line testing"); //SDU1
 			if(line_found) {
 				goal_detected = TRUE;
 				statusAudioCommand(FALSE);

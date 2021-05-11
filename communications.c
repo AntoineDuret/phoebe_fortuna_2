@@ -5,16 +5,6 @@
 #include <communications.h>
 
 /*
-*	Sends floats numbers to the computer
-*/
-void SendFloatToComputer(BaseSequentialStream* out, float* data, uint16_t size) 
-{	
-	chSequentialStreamWrite(out, (uint8_t*)"START", 5);
-	chSequentialStreamWrite(out, (uint8_t*)&size, sizeof(uint16_t));
-	chSequentialStreamWrite(out, (uint8_t*)data, sizeof(float) * size);
-}
-
-/*
 *	Receives int16 values from the computer and fill a float array with complex values.
 *	Puts 0 to the imaginary part. Size is the number of complex numbers.
 *	=> data should be of size (2 * size)

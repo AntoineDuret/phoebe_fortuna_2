@@ -11,7 +11,7 @@ extern "C" {
 #include "msgbus/messagebus.h"
 #include "parameter/parameter.h"
 
-#define		NB_PLAYERS_MAX			15
+#define	NB_PLAYERS_MAX		15
 
 #define NSTEP_ONE_TURN      1000 // number of step for 1 turn of the wheel
 #define WHEEL_DISTANCE      5.1f    // cm 5.35
@@ -51,8 +51,6 @@ void set_player_led_configuration(led_conf_name_t led_conf,
 extern messagebus_t bus;
 
 extern parameter_namespace_t parameter_root;
-
-void SendUint8ToComputer(uint8_t* data, uint16_t size);
 
 #ifdef __cplusplus
 }
