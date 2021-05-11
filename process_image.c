@@ -15,6 +15,8 @@
 #include <audio_processing.h>
 #include <proximity_sensors.h>
 
+#include <chbsem.h>
+
 //only for debugging
 #include "leds.h"
 
@@ -22,7 +24,7 @@ static bool line_found = FALSE;
 static bool goal_detection = FALSE;
 
 //semaphore
-static BSEMAPHORE_DECL(image_ready_sem, TRUE);
+static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be resolved")
 
 
 /* Returns the line width extracted from the image buffer given
