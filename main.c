@@ -1,15 +1,21 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <stdbool.h>
+#include <arm_math.h>
 
 #include "ch.h"
 #include "chprintf.h"
 #include "hal.h"
 #include "shell.h"
+
+#include "audio_processing.h"
 #include "communications.h"
-#include <arm_math.h>
+#include "fft.h"
+#include "main.h"
+#include "process_image.h"
+#include "proximity_sensors.h"
 
 #include "aseba_vm/aseba_node.h"
 #include "aseba_vm/skel_user.h"
@@ -34,7 +40,6 @@
 #include "i2c_bus.h"
 #include "ir_remote.h"
 #include "leds.h"
-#include <main.h>
 #include "memory_protection.h"
 #include "motors.h"
 #include "msgbus/messagebus.h"
@@ -43,19 +48,14 @@
 #include "selector.h"
 #include "spi_comm.h"
 #include "usbcfg.h"
-
 #include "uc_usage.h"
-#include <proximity_sensors.h>
-#include <audio_processing.h>
-#include <fft.h>
-#include <process_image.h>
-//#include "../ChibiOS/os/rt/include/chmtx.h"
 
+#include <chmtx.h>
 
 #define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
 
 messagebus_t bus; // verifier si besoin les 4 lignes pour IR sensor
-MUTEX_DECL(bus_lock);
+MUTEX_DECL(bus_lock); // @suppress("Field cannot be resolved")
 CONDVAR_DECL(bus_condvar);
 parameter_namespace_t parameter_root, aseba_ns;
 
@@ -92,7 +92,7 @@ int main(void) {
     chSysInit();
     mpu_init();
 
-    /** Inits the Inter Process Communication bus. */ // ??
+    ///** Inits the Inter Process Communication bus. */ // ??
     messagebus_init(&bus, &bus_lock, &bus_condvar);
 
     // Peripherals initialization
