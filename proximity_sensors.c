@@ -46,10 +46,10 @@ void obstacle_det_start(void) {
 */
 void obstacle_detection(void) {
 	// Stop e-puck and turn off audio command / obstacle detection / goal detection.
-	statusAudioCommand(FALSE);
+	status_audio_command(FALSE);
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
-	statusGoalDetection(FALSE);
+	status_goal_detection(FALSE);
 	obstacle_det = FALSE;
 
 	// Show 4 red LEDs to indicate that the minimal distance to objects were not kept.
@@ -59,7 +59,7 @@ void obstacle_detection(void) {
     set_led(LED7,1);
 
     // Turn 180° in order to have a free path in front of robot.
-    turnLeftDegrees(180);
+    turn_left_degrees(180);
 
     // Wait 2 seconds additionally as penalty
     chThdSleepMilliseconds(2000);
@@ -71,8 +71,8 @@ void obstacle_detection(void) {
     set_led(LED7,0);
 
     // Turn on audio command / goal detection and after 2s also the obstacle detection.
-    statusAudioCommand(TRUE);
-    statusGoalDetection(TRUE);
+    status_audio_command(TRUE);
+    status_goal_detection(TRUE);
     chThdSleepMilliseconds(2000);
 	obstacle_det = TRUE;
 }
@@ -81,6 +81,6 @@ void obstacle_detection(void) {
 /*
 *	Function to control the obstacle detection command.
 */
-void statusObstDetection(bool status) {
+void status_obst_detection(bool status) {
 	obstacle_det = status;
 }

@@ -37,7 +37,7 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be res
 * 	Returns the line width extracted from the image buffer given.
 * 	Returns 0 if line not found.
 */
-void detectLine(uint8_t *buffer) {
+void detect_line(uint8_t *buffer) {
 
 	volatile uint16_t i = 0, begin = 0, end = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
@@ -143,7 +143,7 @@ static THD_FUNCTION(ProcessImage, arg) {
    		}
 
   		// Search for line in the image and gets its width in pixels
-  		detectLine(image);
+  		detect_line(image);
     }
 }
 
@@ -169,9 +169,9 @@ bool verify_finish_line(void) {
 			if(line_found) {
 				goal_detected = TRUE;
 
-				statusAudioCommand(FALSE);
-				statusObstDetection(FALSE);
-				statusGoalDetection(FALSE);
+				status_audio_command(FALSE);
+				status_obst_detection(FALSE);
+				status_goal_detection(FALSE);
 
 				left_motor_set_speed(0);
 				right_motor_set_speed(0);
@@ -190,7 +190,7 @@ bool verify_finish_line(void) {
 *	params :
 *	bool status		status value TRUE or FALSE
 */
-void statusGoalDetection(bool status) {
+void status_goal_detection(bool status) {
 	goal_detection = status;
 }
 
@@ -209,7 +209,7 @@ void return_to_start_line(void) {
 	right_motor_set_speed(0);
 
 	// Turn left by 60°
-	turnLeftDegrees(60);
+	turn_left_degrees(60);
 
 	time = chVTGetSystemTime();
 	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > 160)) {
@@ -225,16 +225,16 @@ void return_to_start_line(void) {
 	right_motor_set_speed(0);
 
 	// Go forward 6 cm
-	goForwardCM(6);
+	go_forward_cm(6);
 
 	// Turn right for 75°
-	turnRightDegrees(75);
+	turn_right_degrees(75);
 
 	// Go forward 28 cm
-	goForwardCM(28);
+	go_forward_cm(28);
 
 	// Turn right for 75°
-	turnRightDegrees(75);
+	turn_right_degrees(75);
 }
 
 
@@ -244,7 +244,7 @@ void return_to_start_line(void) {
 *	params :
 *	uint8_t degrees		value of the desired rotation angle in degrees
 */
-void turnRightDegrees(uint8_t degrees) {
+void turn_right_degrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
@@ -266,7 +266,7 @@ void turnRightDegrees(uint8_t degrees) {
 *	params :
 *	uint8_t degrees		value of the desired rotation angle in degrees
 */
-void turnLeftDegrees(uint8_t degrees) {
+void turn_left_degrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
@@ -289,7 +289,7 @@ void turnLeftDegrees(uint8_t degrees) {
 *	params :
 *	uint8_t cm		value of the desired distance in cm
 */
-void goForwardCM(uint8_t cm) {
+void go_forward_cm(uint8_t cm) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 

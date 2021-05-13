@@ -34,7 +34,7 @@ typedef enum {
 } BUFFER_NAME_t;
 
 
-void processAudioData(int16_t *data, uint16_t num_samples);
+void process_audio_data(int16_t *data, uint16_t num_samples);
 void doFFT_optimized(uint16_t size, float* complex_buffer);
 void wait_send_to_computer(void);
 float* get_audio_buffer_ptr(BUFFER_NAME_t name);
@@ -46,9 +46,9 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name);
 void mic_input_start(void);
 void player_voice_calibration(float* data);
 void sound_remote(float* data);
-void statusAudioCommand(bool status);
-void statusVoiceCalibration(bool status);
-bool getStatusVoiceCalibration(void);
+void status_audio_command(bool status);
+void status_voice_calibration(bool status);
+bool get_status_voice_calibration(void);
 
 
 #endif /* AUDIO_PROCESSING_H */

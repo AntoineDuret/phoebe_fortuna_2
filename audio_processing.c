@@ -53,7 +53,7 @@ static THD_FUNCTION(micInput_thd, arg) {
       	float* bufferCmplxInput = get_audio_buffer_ptr(LEFT_CMPLX_INPUT);
         float* bufferOutput = get_audio_buffer_ptr(LEFT_OUTPUT);
 
-        uint16_t size = ReceiveInt16FromComputer((BaseSequentialStream *) &SD3,
+        uint16_t size = receive_int16_from_computer((BaseSequentialStream *) &SD3,
         													bufferCmplxInput, FFT_SIZE);
 
         if(size == FFT_SIZE) {
@@ -78,7 +78,7 @@ static THD_FUNCTION(micInput_thd, arg) {
 *							so we have [micRight1, micLeft1, micBack1, micFront1, micRight2, etc...]
 *	uint16_t num_samples	Tells how many data we get in total (should always be 640)
 */
-void processAudioData(int16_t *data, uint16_t num_samples) {
+void process_audio_data(int16_t *data, uint16_t num_samples) {
 	/*
 	*	We get 160 samples per mic every 10 ms.
 	*	So we fill the samples buffers to reach 1024 samples, then we compute the FFTs.
@@ -320,7 +320,7 @@ void sound_remote(float* data) {
 *	params :
 *	bool status		status value TRUE or FALSE
 */
-void statusAudioCommand(bool status) {
+void status_audio_command(bool status) {
 	audio_command_on = status;
 }
 
@@ -331,7 +331,7 @@ void statusAudioCommand(bool status) {
 *	params :
 *	bool status		status value TRUE or FALSE
 */
-void statusVoiceCalibration(bool status) {
+void status_voice_calibration(bool status) {
 	voice_calibration_on = status;
 }
 
@@ -339,6 +339,6 @@ void statusVoiceCalibration(bool status) {
 /*
 *	Function to get the voice calibration control status.
 */
-bool getStatusVoiceCalibration(void) {
+bool get_status_voice_calibration(void) {
 	return voice_calibration_on;
 }

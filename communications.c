@@ -12,7 +12,7 @@
 *	Puts 0 to the imaginary part. Size is the number of complex numbers.
 *	=> data should be of size (2 * size)
 */
-uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_t size) {
+uint16_t receive_int16_from_computer(BaseSequentialStream* in, float* data, uint16_t size) {
 	volatile uint8_t c1, c2;
 	volatile uint16_t temp_size = 0;
 	uint16_t i=0;

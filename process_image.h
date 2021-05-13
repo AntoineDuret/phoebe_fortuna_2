@@ -15,7 +15,7 @@
 #define NSTEP_ONE_TURN      1000 					// number of steps for 1 turn of the wheel
 
 
-void detectLine(uint8_t *buffer);
+void detect_line(uint8_t *buffer);
 void process_image_start(void);
 
 
@@ -23,10 +23,10 @@ void process_image_start(void);
 /* 								NEW FUNCTIONS DEFINED									*/
 /*======================================================================================*/
 bool verify_finish_line(void);
-void statusGoalDetection(bool status);
+void status_goal_detection(bool status);
 void return_to_start_line(void);
-void turnRightDegrees(uint8_t degrees);
-void turnLeftDegrees(uint8_t degrees);
-void goForwardCM(uint8_t cm);
+void turn_right_degrees(uint8_t degrees);
+void turn_left_degrees(uint8_t degrees);
+void go_forward_cm(uint8_t cm);
 
 #endif /* PROCESS_IMAGE_H */

@@ -55,7 +55,7 @@ int main(void) {
 	proximity_start();
 	obstacle_det_start();
 	VL53L0X_start();				// ToF
-    mic_start(&processAudioData);
+    mic_start(&process_audio_data);
     mic_input_start();
     process_image_start();
 
@@ -246,9 +246,9 @@ void led_selector_management(int selector_pos) {
 void player_voice_config(void) {
 	chThdSleepMilliseconds(500);
     set_front_led(1);
-    statusVoiceCalibration(TRUE);
+    status_voice_calibration(TRUE);
 
-    while(getStatusVoiceCalibration()) {
+    while(get_status_voice_calibration()) {
     	chThdSleepMilliseconds(300);
     }
 
@@ -277,9 +277,9 @@ uint game_running(void) {
 	chThdSleepSeconds(1);
 	set_led(LED1, 0);
 
-	statusAudioCommand(TRUE);
-    statusObstDetection(TRUE);
-    statusGoalDetection(TRUE);
+	status_audio_command(TRUE);
+	status_obst_detection(TRUE);
+    status_goal_detection(TRUE);
 
     time = chVTGetSystemTime();
 
