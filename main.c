@@ -77,7 +77,7 @@ int main(void) {
         		set_body_led(1);
 
         		if(currentPlayer > 0) {
-        			positionningGoal();
+        			return_to_start_line();
 
         			// Wait till next player is ready
         			while(get_selector() != currentPlayer) {

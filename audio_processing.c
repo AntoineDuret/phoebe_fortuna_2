@@ -7,7 +7,6 @@
 
 #include "audio_processing.h"
 #include "communications.h"
-//#include "fft.h"
 #include "main.h"
 #include "process_image.h"
 #include "proximity_sensors.h"
@@ -317,6 +316,9 @@ void sound_remote(float* data) {
 
 /*
 *	Function to control the audio command.
+*
+*	params :
+*	bool status		status value TRUE or FALSE
 */
 void statusAudioCommand(bool status) {
 	audio_command_on = status;
@@ -325,6 +327,9 @@ void statusAudioCommand(bool status) {
 
 /*
 *	Function to control the voice calibration.
+*
+*	params :
+*	bool status		status value TRUE or FALSE
 */
 void statusVoiceCalibration(bool status) {
 	voice_calibration_on = status;
