@@ -79,11 +79,10 @@ void obstacle_detection(void) {
     set_led(LED5,0);
     set_led(LED7,0);
 
-    // Turn on audio command / goal detection and after 2s also the obstacle detection.
+    // Turn on audio command
     status_audio_command(TRUE);
     status_goal_detection(TRUE);
-    chThdSleepMilliseconds(2000);
-	obstacle_det = TRUE;
+   	obstacle_det = TRUE;
 }
 
 

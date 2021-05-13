@@ -47,7 +47,7 @@ void detect_line(uint8_t *buffer) {
 
 	volatile uint16_t i = 0, begin = 0, end = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
-	uint32_t mean = 0;
+	uint32_t mean = 0, mean_line = 0;
 
 	// Performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
@@ -100,7 +100,17 @@ void detect_line(uint8_t *buffer) {
 	if(line_not_found) {
 		line_found = FALSE;
 	} else {
-		line_found = TRUE;
+		// Performs an average
+		for(uint32_t i = begin ; i < end ; i++) {
+			mean_line += buffer[i];
+		}
+		mean_line /= IMAGE_BUFFER_SIZE;
+
+		if((mean - mean_line) > MIN_DIFF_IMAGE_MEANS) {
+			line_found = TRUE;
+		} else {
+			line_found = FALSE;
+		}
 	}
 }
 
@@ -171,7 +181,7 @@ void process_image_start(void) {
 bool verify_finish_line(void) {
 	bool goal_detected = FALSE;
 	if(goal_detection) {
-		if(VL53L0X_get_dist_mm() <= GOAL_DIST_MIN) {
+		if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
 			if(line_found) {
 				goal_detected = TRUE;
 
@@ -214,8 +224,8 @@ void return_to_start_line(void) {
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
-	// Turn left by 60°
-	turn_left_degrees(60);
+	// Turn left by 50°
+	turn_left_degrees(50);
 
 	time = chVTGetSystemTime();
 	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE)) {
@@ -224,7 +234,7 @@ void return_to_start_line(void) {
 		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
 		right_motor_set_speed(rightSpeed);
 		left_motor_set_speed(leftSpeed);
-		chThdSleepUntilWindowed(time, time + MS2ST(30)); // Refresh @ 100 Hz.
+		chThdSleepUntilWindowed(time, time + MS2ST(15)); // Refresh @ 100 Hz.
 	}
 
 	left_motor_set_speed(0);
@@ -241,6 +251,9 @@ void return_to_start_line(void) {
 
 	// Turn right for 75°
 	turn_right_degrees(75);
+
+	status_audio_command(FALSE);
+	status_voice_calibration(FALSE);
 }
 
 
