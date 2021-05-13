@@ -1,3 +1,11 @@
+/*
+  \file   	proximity_sensors.c
+  \author 	Antoine Duret & Carla Schmid (Group G08)
+  \date   	13.05.2021
+  \version	2.0
+  \brief  	Code for obstacle avoidance with proximity sensors
+*/
+
 #include <stdbool.h>
 #include <arm_math.h>
 
@@ -28,6 +36,7 @@ static THD_FUNCTION(prox_sens_thd, arg) {
     			obstacle_detection();
     		}
     	}
+
     	chThdSleepMilliseconds(100);
     }
 }

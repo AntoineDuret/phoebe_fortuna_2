@@ -1,3 +1,11 @@
+/*
+  \file   	process_image.c
+  \author 	Antoine Duret & Carla Schmid (Group G08)
+  \date   	13.05.2021
+  \version	2.0
+  \brief  	Code for image processing related tasks
+*/
+
 #include "ch.h"
 #include "hal.h"
 
@@ -16,8 +24,6 @@
 #include "sensors/VL53L0X/VL53L0X.h"
 #include "leds.h"
 #include "motors.h"
-
-#include <chbsem.h>
 
 
 static bool line_found = FALSE;
@@ -212,7 +218,7 @@ void return_to_start_line(void) {
 	turn_left_degrees(60);
 
 	time = chVTGetSystemTime();
-	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > 160)) {
+	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE)) {
 		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
 		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
 		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
@@ -248,10 +254,11 @@ void turn_right_degrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	left_motor_set_speed(600);
-	right_motor_set_speed(-600);
+	left_motor_set_speed(GAME_SPEED/2);
+	right_motor_set_speed(-GAME_SPEED/2);
 
-	while(abs(right_motor_get_pos()) <= (PERIMETER_EPUCK * NSTEP_ONE_TURN/360 / WHEEL_PERIMETER) * degrees) {
+	while(abs(right_motor_get_pos()) <=
+			(PERIMETER_EPUCK * NSTEP_ONE_TURN/360 / WHEEL_PERIMETER) * degrees) {
 		chThdSleepMilliseconds(100);
 	}
 
@@ -270,8 +277,8 @@ void turn_left_degrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	left_motor_set_speed(-600);
-	right_motor_set_speed(600);
+	left_motor_set_speed(-GAME_SPEED/2);
+	right_motor_set_speed(GAME_SPEED/2);
 
 	while(abs(right_motor_get_pos()) <=
 			(PERIMETER_EPUCK * NSTEP_ONE_TURN/360 / WHEEL_PERIMETER) * degrees) {
@@ -293,8 +300,8 @@ void go_forward_cm(uint8_t cm) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	left_motor_set_speed(900);
-	right_motor_set_speed(900);
+	left_motor_set_speed(GAME_SPEED);
+	right_motor_set_speed(GAME_SPEED);
 
 	while(abs(right_motor_get_pos()) <= (cm * NSTEP_ONE_TURN / WHEEL_PERIMETER)) {
 		chThdSleepMilliseconds(100);

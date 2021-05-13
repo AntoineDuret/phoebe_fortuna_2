@@ -14,6 +14,9 @@ extern "C" {
 
 // The game can be played with 1 to 15 players
 #define	NB_PLAYERS_MAX			15
+
+// User has a delay to stay on a selector position before nbPlayers is set and saved.
+// This delay is given by: 		delay = (SELECT_PLAYER_DELAY*0.1) [s]	(see game_setting function)
 #define SELECT_PLAYER_DELAY		25
 
 // List of the RGB LED configurations
@@ -25,6 +28,7 @@ typedef enum {
 } led_conf_name_t;
 
 // List of the RGB LED colors
+#define		NO_LIGHT		  0,   0,   0
 #define		BLUE			  0,   0, 100
 #define		PINK			100,   0, 100
 #define		LIGHT_BLUE		  0, 100, 100
