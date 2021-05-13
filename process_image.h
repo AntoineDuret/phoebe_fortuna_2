@@ -8,8 +8,8 @@
 #define WIDTH_SLOPE				10 		//pixel (before 5)
 #define MIN_LINE_WIDTH			155
 #define GOAL_DIST_MIN			30
-#define GOAL_DIST_MAX			130
-#define MIN_DIFF_IMAGE_MEANS	40
+#define GOAL_DIST_MAX			120
+#define MIN_DIFF_IMAGE_MEANS	80
 
 // Geometrical parameters of the e-puck2
 #define WHEEL_PERIMETER     12.5f 					// in [cm]

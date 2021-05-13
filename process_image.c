@@ -47,7 +47,7 @@ void detect_line(uint8_t *buffer) {
 
 	volatile uint16_t i = 0, begin = 0, end = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
-	uint32_t mean = 0, mean_line = 0;
+	uint32_t mean = 0;
 
 	// Performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
@@ -69,10 +69,10 @@ void detect_line(uint8_t *buffer) {
 		}
 
 		// If begin was found, search for an end
-		if(i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE) && begin) {
+		if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
 			stop = 0;
-			while (stop == 0 && i < IMAGE_BUFFER_SIZE) {
-				if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
+			while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
+				if(buffer[i] < mean && buffer[i+WIDTH_SLOPE] > mean) {
 					end = i;
 					stop = 1;
 				}
@@ -88,7 +88,7 @@ void detect_line(uint8_t *buffer) {
 		}
 
 		// If too small has been detected, continue the search
-		if(!line_not_found && (end-begin) < MIN_LINE_WIDTH) {
+		if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
 			i = end;
 			begin = 0;
 			end = 0;
@@ -100,17 +100,7 @@ void detect_line(uint8_t *buffer) {
 	if(line_not_found) {
 		line_found = FALSE;
 	} else {
-		// Performs an average
-		for(uint32_t i = begin ; i < end ; i++) {
-			mean_line += buffer[i];
-		}
-		mean_line /= IMAGE_BUFFER_SIZE;
-
-		if((mean - mean_line) > MIN_DIFF_IMAGE_MEANS) {
-			line_found = TRUE;
-		} else {
-			line_found = FALSE;
-		}
+		line_found = TRUE;
 	}
 }
 
