@@ -30,7 +30,7 @@
 /*======================================================================================*/
 
 // Semaphore
-static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);  // @suppress("Field cannot be resolved")
+static BSEMAPHORE_DECL(sendToComputer_sem, TRUE); // @suppress("Field cannot be resolved")
 
 // 2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -283,7 +283,8 @@ void sound_remote(float* data) {
 		}
 	}
 
-	// PID regulator implementation for fine audio control
+	// PID regulator implementation on the speed for fine audio control.
+	// Defined with the error between the mid_freq (voice calibration) and the control freq.
 	if((max_norm_index == -1) || (audio_command_on == 0)) {
 		left_motor_set_speed(0);
 		right_motor_set_speed(0);
@@ -294,6 +295,7 @@ void sound_remote(float* data) {
 		deriv_error = error - previous_error;
 		previous_error = error;
 
+		// ARW
 		if(abs(sum_error) > MAX_SUM_ERROR) {
 			if(sum_error > 0) {
 				sum_error = MAX_SUM_ERROR;

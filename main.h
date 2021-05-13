@@ -15,7 +15,7 @@ extern "C" {
 #define	NB_PLAYERS_MAX			15
 
 // User has a delay to stay on a selector position before nbPlayers is set and saved.
-// This delay is given by: 		delay = (SELECT_PLAYER_DELAY*0.1) [s]	(see game_setting function)
+// This delay is given by: 		delay = (PLAYER_SELECT_DELAY*0.1) [s]	(see game_setting function)
 #define	PLAYER_SELECT_DELAY		25
 
 // List of the RGB LED configurations
@@ -35,9 +35,9 @@ typedef enum {
 #define		ORANGE				100,  30,   0
 
 
-/*
- * NEW FUNCTIONS DEFINED
- */
+/*======================================================================================*/
+/* 								NEW FUNCTIONS DEFINED									*/
+/*======================================================================================*/
 uint8_t game_setting(void);
 void led_selector_management(int selector_pos);
 void player_voice_config(void);
@@ -47,7 +47,7 @@ void set_player_led_configuration(led_conf_name_t led_conf,
 void body_led_confirm(void);
 
 
-/** Robot wide IPC bus. */
+// Robot wide IPC bus
 extern messagebus_t bus;
 
 extern parameter_namespace_t parameter_root;

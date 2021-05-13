@@ -44,7 +44,6 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be res
 * 	Returns 0 if line not found.
 */
 void detect_line(uint8_t *buffer) {
-
 	volatile uint16_t i = 0, begin = 0, end = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
@@ -58,6 +57,7 @@ void detect_line(uint8_t *buffer) {
 
 	do {
 		wrong_line = 0;
+
 		// Search for a begin
 		while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
 			if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
@@ -71,8 +71,9 @@ void detect_line(uint8_t *buffer) {
 		// If begin was found, search for an end
 		if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
 			stop = 0;
+
 			while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
-				if(buffer[i] < mean && buffer[i+WIDTH_SLOPE] > mean) {
+				if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
 					end = i;
 					stop = 1;
 				}
@@ -121,8 +122,10 @@ static THD_FUNCTION(CaptureImage, arg) {
 	while(1) {
         // Starts a capture
 		dcmi_capture_start();
+
 		// Waits for the capture to be done
 		wait_image_ready();
+
 		// Signals an image has been captured
 		chBSemSignal(&image_ready_sem);
     }
@@ -141,6 +144,7 @@ static THD_FUNCTION(ProcessImage, arg) {
     while(1) {
     	// Waits until an image has been captured
         chBSemWait(&image_ready_sem);
+
         // Gets the pointer to the array filled with the last image in RGB565
         img_buff_ptr = dcmi_get_last_image_ptr();
 

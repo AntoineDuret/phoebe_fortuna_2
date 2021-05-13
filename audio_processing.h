@@ -16,7 +16,7 @@
 // PID regulator parameters (tuned manually)
 #define KP 						200
 #define KD						2
-#define KI 						2.25
+#define KI 						2.25f
 #define MAX_SUM_ERROR			(GAME_SPEED/KI)		// ARW implementation
 
 typedef enum {

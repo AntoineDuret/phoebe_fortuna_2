@@ -1,3 +1,11 @@
+/*
+  \file   	main.c
+  \author 	Antoine Duret & Carla Schmid (Group G08)
+  \date   	13.05.2021
+  \version	3.0
+  \brief  	Main functions and LED management
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +42,7 @@
 #define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
 
 messagebus_t bus;
-MUTEX_DECL(bus_lock); 		// @suppress("Field cannot be resolved")
+MUTEX_DECL(bus_lock); // @suppress("Field cannot be resolved")
 CONDVAR_DECL(bus_condvar);
 parameter_namespace_t parameter_root, aseba_ns;
 
@@ -88,10 +96,11 @@ int main(void) {
         			// Confirm selector state
         			body_led_confirm();
 
-        		} else {
+        		} else { // Display the winner!
         			for(uint8_t i = 1; i < nbPlayers; i++) {
-        				if(tabPlayers[i] < tabPlayers[currentPlayer])
+        				if(tabPlayers[i] < tabPlayers[currentPlayer]) {
         					currentPlayer = i;
+        				}
         			}
 
         			led_selector_management(currentPlayer + 1);
@@ -245,8 +254,7 @@ void body_led_confirm(void) {
 
 
 /*
-*	Function to initialize all the settings before the game starts which are relevant for the player
-*	(voice calibration for player)
+*	Function to display the player voice configuration before each game and for each player.
 */
 void player_voice_config(void) {
 	chThdSleepMilliseconds(500);
