@@ -2,7 +2,7 @@
   \file   	process_image.c
   \author 	Antoine Duret & Carla Schmid (Group G08)
   \date   	13.05.2021
-  \version	2.0
+  \version	2.1
   \brief  	Code for image processing related tasks
 */
 
@@ -26,6 +26,7 @@
 #include "motors.h"
 
 
+static float distance_cm = 0;
 static bool line_found = FALSE;
 static bool goal_detection = FALSE;
 
@@ -43,10 +44,12 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be res
 * 	Returns the line width extracted from the image buffer given.
 * 	Returns 0 if line not found.
 */
-void detect_line(uint8_t *buffer) {
-	volatile uint16_t i = 0, begin = 0, end = 0;
+uint16_t detect_line(uint8_t *buffer) {
+	volatile uint16_t i = 0, begin = 0, end = 0, width = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
+
+	static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
 
 	// Performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
@@ -99,9 +102,20 @@ void detect_line(uint8_t *buffer) {
 	} while(wrong_line);
 
 	if(line_not_found) {
+		begin = 0;
+		end = 0;
+		width = last_width;
 		line_found = FALSE;
 	} else {
+		last_width = width = (end - begin);
 		line_found = TRUE;
+	}
+
+	// Sets a maximum width or returns the measured width
+	if((PXTOCM/width) > MAX_DISTANCE) {
+		return PXTOCM/MAX_DISTANCE;
+	} else {
+		return width;
 	}
 }
 
@@ -134,12 +148,12 @@ static THD_FUNCTION(CaptureImage, arg) {
 
 static THD_WORKING_AREA(waProcessImage, 1024);
 static THD_FUNCTION(ProcessImage, arg) {
-
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
+	uint16_t lineWidth = 0;
 
     while(1) {
     	// Waits until an image has been captured
@@ -152,8 +166,13 @@ static THD_FUNCTION(ProcessImage, arg) {
    			image[i/2] = ((uint8_t) img_buff_ptr[i] & 0xF8); // red
    		}
 
-  		// Search for line in the image and gets its width in pixels
-  		detect_line(image);
+  		// Search for a line in the image and gets its width in pixels
+		lineWidth = detect_line(image);
+
+		// Converts the width into a distance between the robot and the camera
+		if(lineWidth){
+			distance_cm = PXTOCM/lineWidth;
+		}
     }
 }
 
@@ -174,18 +193,24 @@ void process_image_start(void) {
 */
 bool verify_finish_line(void) {
 	bool goal_detected = FALSE;
+
+	// Goal detection command is active
 	if(goal_detection) {
+		// The robot is at a reasonable distance for a true line detection
 		if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
-			if(line_found) {
-				goal_detected = TRUE;
+			// The distances given by the TOF sensor / calculated from the image are nearly the same
+			if(abs(VL53L0X_get_dist_mm()/10 - distance_cm) < DISTANCE_ERROR_MARGIN) {
+				// A line was found
+				if(line_found) {
+					goal_detected = TRUE;
 
-				status_audio_command(FALSE);
-				status_obst_detection(FALSE);
-				status_goal_detection(FALSE);
+					status_audio_command(FALSE);
+					status_obst_detection(FALSE);
+					status_goal_detection(FALSE);
 
-				left_motor_set_speed(0);
-				right_motor_set_speed(0);
-
+					left_motor_set_speed(0);
+					right_motor_set_speed(0);
+				}
 			}
 		}
 	}

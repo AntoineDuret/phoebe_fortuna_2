@@ -5,11 +5,15 @@
 
 // Parameters for line detection with embedded camera
 #define IMAGE_BUFFER_SIZE		640
-#define WIDTH_SLOPE				10 		//pixel (before 5)
+#define WIDTH_SLOPE				10 		// pixel (before 5)
 #define MIN_LINE_WIDTH			155
 #define GOAL_DIST_MIN			30
 #define GOAL_DIST_MAX			120
 #define MIN_DIFF_IMAGE_MEANS	80
+#define PXTOCM					1		// /!\ to be set
+#define GOAL_DISTANCE			1		// /!\ to be set
+#define MAX_DISTANCE			1		// /!\ to be set
+#define DISTANCE_ERROR_MARGIN	1		// /!\ to be set // in [cm]
 
 // Geometrical parameters of the e-puck2
 #define WHEEL_PERIMETER     12.5f 					// in [cm]
@@ -21,7 +25,7 @@
 #define RETURN_LINE_DETECTION_DISTANCE		160		// in [mm]
 
 
-void detect_line(uint8_t *buffer);
+uint16_t detect_line(uint8_t *buffer);
 void process_image_start(void);
 
 
