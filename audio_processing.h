@@ -14,9 +14,9 @@
 #define	ERROR_THRESHOLD			0.1f
 
 // PID regulator parameters (tuned manually)
-#define KP 						200.0f
-#define KD						2.0f
-#define KI 						2.25f
+#define KP 						200
+#define KD						2
+#define KI 						2.25
 #define MAX_SUM_ERROR			(GAME_SPEED/KI)		// ARW implementation
 
 typedef enum {
@@ -34,8 +34,8 @@ typedef enum {
 } BUFFER_NAME_t;
 
 
-void mic_input_start(void);
 void processAudioData(int16_t *data, uint16_t num_samples);
+void doFFT_optimized(uint16_t size, float* complex_buffer);
 void wait_send_to_computer(void);
 float* get_audio_buffer_ptr(BUFFER_NAME_t name);
 
@@ -43,6 +43,7 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name);
 /*======================================================================================*/
 /* 								NEW FUNCTIONS DEFINED									*/
 /*======================================================================================*/
+void mic_input_start(void);
 void player_voice_calibration(float* data);
 void sound_remote(float* data);
 void statusAudioCommand(bool status);

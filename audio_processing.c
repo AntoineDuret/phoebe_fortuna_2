@@ -1,4 +1,5 @@
 #include <arm_math.h>
+#include <arm_const_structs.h>
 
 #include "ch.h"
 #include "chprintf.h"
@@ -6,7 +7,7 @@
 
 #include "audio_processing.h"
 #include "communications.h"
-#include "fft.h"
+//#include "fft.h"
 #include "main.h"
 #include "process_image.h"
 #include "proximity_sensors.h"
@@ -16,8 +17,6 @@
 #include "usbcfg.h"
 
 #include "chbsem.h"
-
-#include "leds.h" // /!\ Debug
 
 
 /*======================================================================================*/
@@ -30,15 +29,15 @@ static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);  // @suppress("Field cannot be
 
 // 2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
-static float micRight_cmplx_input[2 * FFT_SIZE];
-static float micFront_cmplx_input[2 * FFT_SIZE];
-static float micBack_cmplx_input[2 * FFT_SIZE];
+//static float micRight_cmplx_input[2 * FFT_SIZE];
+//static float micFront_cmplx_input[2 * FFT_SIZE];
+//static float micBack_cmplx_input[2 * FFT_SIZE];
 
 // Arrays containing the computed magnitude of the complex numbers
 static float micLeft_output[FFT_SIZE];
-static float micRight_output[FFT_SIZE];
-static float micFront_output[FFT_SIZE];
-static float micBack_output[FFT_SIZE];
+//static float micRight_output[FFT_SIZE];
+//static float micFront_output[FFT_SIZE];
+//static float micBack_output[FFT_SIZE];
 
 static bool audio_command_on = 0;
 static bool voice_calibration_on = 0;
@@ -71,11 +70,6 @@ static THD_FUNCTION(micInput_thd, arg) {
 }
 
 
-void mic_input_start(void) {
-	chThdCreateStatic(micInput_thd_wa, sizeof(micInput_thd_wa), NORMALPRIO, micInput_thd, NULL);
-}
-
-
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
@@ -95,17 +89,17 @@ void processAudioData(int16_t *data, uint16_t num_samples) {
 	// Loop to fill the buffers
 	for(uint16_t i = 0 ; i < num_samples ; i+=4) {
 		// Construct an array of complex numbers. Put 0 to the imaginary part
-		micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
+		//micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
 		micLeft_cmplx_input[nb_samples] = (float)data[i + MIC_LEFT];
-		micBack_cmplx_input[nb_samples] = (float)data[i + MIC_BACK];
-		micFront_cmplx_input[nb_samples] = (float)data[i + MIC_FRONT];
+		//micBack_cmplx_input[nb_samples] = (float)data[i + MIC_BACK];
+		//micFront_cmplx_input[nb_samples] = (float)data[i + MIC_FRONT];
 
 		nb_samples++;
 
-		micRight_cmplx_input[nb_samples] = 0;
+		//micRight_cmplx_input[nb_samples] = 0;
 		micLeft_cmplx_input[nb_samples] = 0;
-		micBack_cmplx_input[nb_samples] = 0;
-		micFront_cmplx_input[nb_samples] = 0;
+		//micBack_cmplx_input[nb_samples] = 0;
+		//micFront_cmplx_input[nb_samples] = 0;
 
 		nb_samples++;
 
@@ -123,6 +117,9 @@ void processAudioData(int16_t *data, uint16_t num_samples) {
 		*	We use only the left microphone.
 		*/
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
+		//doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
+		//doFFT_optimized(FFT_SIZE, micBack_cmplx_input);
+		//doFFT_optimized(FFT_SIZE, micFront_cmplx_input);
 
 		/*
 		*	- Magnitude processing -
@@ -130,6 +127,10 @@ void processAudioData(int16_t *data, uint16_t num_samples) {
 		*	in a buffer of FFT_SIZE because it only contains real numbers.
 		*/
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
+		//arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
+		//arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
+		//arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
+
 
 		// Sends only one FFT result over 8 for 1 mic
 		if((voice_calibration_on)) {
@@ -141,6 +142,17 @@ void processAudioData(int16_t *data, uint16_t num_samples) {
 		if(audio_command_on) {
 			sound_remote(micLeft_output);
 		}
+	}
+}
+
+
+/*
+*	Wrapper to call a very optimized fft function provided by ARM
+*	which uses a lot of tricks to optimize the computations
+*/
+void doFFT_optimized(uint16_t size, float* complex_buffer) {
+	if(size == 1024) {
+		arm_cfft_f32(&arm_cfft_sR_f32_len1024, complex_buffer, 0, 1);
 	}
 }
 
@@ -160,27 +172,28 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name) {
 	if(name == LEFT_CMPLX_INPUT) {
 		return micLeft_cmplx_input;
 	}
-	else if(name == RIGHT_CMPLX_INPUT) {
-		return micRight_cmplx_input;
-	}
-	else if(name == FRONT_CMPLX_INPUT) {
-		return micFront_cmplx_input;
-	}
-	else if(name == BACK_CMPLX_INPUT) {
-		return micBack_cmplx_input;
-	}
+//	}
+//	else if(name == RIGHT_CMPLX_INPUT) {
+//		return micRight_cmplx_input;
+//	}
+//	else if(name == FRONT_CMPLX_INPUT) {
+//		return micFront_cmplx_input;
+//	}
+//	else if(name == BACK_CMPLX_INPUT) {
+//		return micBack_cmplx_input;
+//	}
 	else if(name == LEFT_OUTPUT) {
 		return micLeft_output;
 	}
-	else if(name == RIGHT_OUTPUT) {
-		return micRight_output;
-	}
-	else if(name == FRONT_OUTPUT) {
-		return micFront_output;
-	}
-	else if(name == BACK_OUTPUT) {
-		return micBack_output;
-	}
+//	else if(name == RIGHT_OUTPUT) {
+//		return micRight_output;
+//	}
+//	else if(name == FRONT_OUTPUT) {
+//		return micFront_output;
+//	}
+//	else if(name == BACK_OUTPUT) {
+//		return micBack_output;
+//	}
 	else {
 		return NULL;
 	}
@@ -193,6 +206,14 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name) {
 /*======================================================================================*/
 
 /*
+*	Function to start the THREAD controlling the mic.
+*/
+void mic_input_start(void) {
+	chThdCreateStatic(micInput_thd_wa, sizeof(micInput_thd_wa), NORMALPRIO, micInput_thd, NULL);
+}
+
+
+/*
 *	Function defined to do the voice calibration for each player before their game.
 *
 *	params :
@@ -200,7 +221,7 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name) {
 *						for one mic
 */
 void player_voice_calibration(float* data) {
-	float max_norm = MIN_VALUE_THRESHOLD;
+	uint16_t max_norm = MIN_VALUE_THRESHOLD;
 	int16_t max_norm_index = -1;
 	static uint16_t ind_sample = 0;
 	static uint16_t average_freq = 0;
@@ -239,15 +260,15 @@ void player_voice_calibration(float* data) {
 *						for one mic
 */
 void sound_remote(float* data) {
-	float error = 0;
+	int16_t error = 0;
 	float speed = 0;
 
-	float max_norm = MIN_VALUE_THRESHOLD;
+	uint16_t max_norm = MIN_VALUE_THRESHOLD;
 	int16_t max_norm_index = -1;
 
-	static float sum_error = 0;
-	static float previous_error = 0;
-	float deriv_error = 0;
+	static int16_t sum_error = 0;
+	static int16_t previous_error = 0;
+	int16_t deriv_error = 0;
 
 	// Search for the highest peak
 	for(uint16_t i = mid_freq - HALF_BW ; i <= mid_freq + HALF_BW ; i++) {
@@ -295,16 +316,24 @@ void sound_remote(float* data) {
 
 
 /*
-*	Three little functions to control the audio / allow the voice calibration.
+*	Function to control the audio command.
 */
 void statusAudioCommand(bool status) {
 	audio_command_on = status;
 }
 
+
+/*
+*	Function to control the voice calibration.
+*/
 void statusVoiceCalibration(bool status) {
 	voice_calibration_on = status;
 }
 
+
+/*
+*	Function to get the voice calibration control status.
+*/
 bool getStatusVoiceCalibration(void) {
 	return voice_calibration_on;
 }

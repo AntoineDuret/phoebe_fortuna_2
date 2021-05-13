@@ -17,7 +17,7 @@
 
 #include <chbsem.h>
 
-//only for debugging
+// only for debugging
 #include "leds.h"
 
 static bool line_found = FALSE;

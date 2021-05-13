@@ -29,6 +29,7 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
         			state = 1;
         		else
         			state = 0;
+        		/* no break */
         	case 1:
         		if(c1 == 'T')
         			state = 2;
@@ -36,6 +37,7 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
         			state = 1;
         		else
         			state = 0;
+        		/* no break */
         	case 2:
         		if(c1 == 'A')
         			state = 3;
@@ -43,6 +45,7 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
         			state = 1;
         		else
         			state = 0;
+        		/* no break */
         	case 3:
         		if(c1 == 'R')
         			state = 4;
@@ -50,6 +53,7 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
         			state = 1;
         		else
         			state = 0;
+        		/* no break */
         	case 4:
         		if(c1 == 'T')
         			state = 5;
@@ -57,6 +61,7 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
         			state = 1;
         		else
         			state = 0;
+        		/* no break */
         }
 	}
 
@@ -67,8 +72,8 @@ uint16_t ReceiveInt16FromComputer(BaseSequentialStream* in, float* data, uint16_
 	// -> number of int16_t data
 	temp_size = (int16_t)((c1 | c2<<8));
 
-	if((temp_size/2) == size){
-		for(i = 0 ; i < (temp_size/2) ; i++){
+	if((temp_size/2) == size) {
+		for(i = 0 ; i < (temp_size/2) ; i++) {
 
 			c1 = chSequentialStreamGet(in);
 			c2 = chSequentialStreamGet(in);

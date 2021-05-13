@@ -13,7 +13,8 @@ extern "C" {
 
 
 // The game can be played with 1 to 15 players
-#define	NB_PLAYERS_MAX		15
+#define	NB_PLAYERS_MAX			15
+#define SELECT_PLAYER_DELAY		25
 
 // Geometrical parameters of the e-puck2
 #define WHEEL_PERIMETER     12.5f 					// in [cm]

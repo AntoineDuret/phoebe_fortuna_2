@@ -10,7 +10,6 @@
 
 #include "audio_processing.h"
 #include "communications.h"
-#include "fft.h"
 #include "main.h"
 #include "process_image.h"
 #include "proximity_sensors.h"
@@ -55,7 +54,7 @@ int main(void) {
 	motors_init();
 	proximity_start();
 	obstacle_det_start();
-	VL53L0X_start();				// ToF init
+	VL53L0X_start();				// ToF
     mic_start(&processAudioData);
     mic_input_start();
     process_image_start();
@@ -80,7 +79,7 @@ int main(void) {
         		if(currentPlayer > 0) {
         			positionningGoal();
 
-        			// Wait till next player is ready  						// add wait for x seconds till confirmation set
+        			// Wait till next player is ready
         			while(get_selector() != currentPlayer) {
         				chThdSleepMilliseconds(100);
         				led_selector_management(get_selector());
@@ -96,14 +95,16 @@ int main(void) {
         				}
         			}
 
+        			clear_leds();
+        			chThdSleepSeconds(1);
         			led_selector_management(currentPlayer + 1);
-        			set_body_led(1);
+        			body_led_confirm();
         			currentPlayer = 0;
         		}
         	}
         }
 
-        chThdSleepMilliseconds(5000);
+        chThdSleepSeconds(3);
 
         while(get_selector() != 0) {
         	chThdSleepMilliseconds(100);
@@ -133,7 +134,7 @@ uint8_t game_setting(void) {
 		set_led(LED3, 2);
 		set_led(LED5, 2);
 		set_led(LED7, 2);
-		chThdSleepMilliseconds(1000);
+		chThdSleepSeconds(1);
 	}
 
 	if(get_selector() == 0) {
@@ -154,7 +155,7 @@ uint8_t game_setting(void) {
 			led_selector_management(get_selector());
 			chThdSleepMilliseconds(100);
 			i++;
-		} while(i < 25); 									// /!\ MAGIC NUMBER
+		} while(i < SELECT_PLAYER_DELAY);
 
 		i = 0;
 	} while((selector_state != get_selector()) || (get_selector() == 0));
@@ -173,67 +174,67 @@ void led_selector_management(int selector_pos) {
 	switch(selector_pos) {
 		case 0: // waiting state
 			set_player_led_configuration(FULL, 0, 0, 0);
-		break;
+			break;
 
 		case 1: // player 1
 			set_player_led_configuration(FULL, BLUE);
-		break;
+			break;
 
 		case 2: // player 2
 			set_player_led_configuration(FULL, PINK);
-		break;
+			break;
 
 		case 3: // ...
 			set_player_led_configuration(FULL, LIGHT_BLUE);
-		break;
+			break;
 
 		case 4:
 			set_player_led_configuration(FULL, YELLOW);
-		break;
+			break;
 
 		case 5:
 			set_player_led_configuration(FULL, ORANGE);
-		break;
+			break;
 
 		case 6:
 			set_player_led_configuration(HALF, BLUE);
-		break;
+			break;
 
 		case 7:
 			set_player_led_configuration(HALF, PINK);
-		break;
+			break;
 
 		case 8:
 			set_player_led_configuration(HALF, LIGHT_BLUE);
-		break;
+			break;
 
 		case 9:
 			set_player_led_configuration(HALF, YELLOW);
-		break;
+			break;
 
 		case 10:
 			set_player_led_configuration(HALF, ORANGE);
-		break;
+			break;
 
 		case 11:
 			set_player_led_configuration(DIAG, BLUE);
-		break;
+			break;
 
 		case 12:
 			set_player_led_configuration(DIAG, PINK);
-		break;
+			break;
 
 		case 13:
 			set_player_led_configuration(DIAG, LIGHT_BLUE);
-		break;
+			break;
 
 		case 14:
 			set_player_led_configuration(DIAG, YELLOW);
-		break;
+			break;
 
 		case 15:
 			set_player_led_configuration(DIAG, ORANGE);
-		break;
+			break;
 	}
 }
 
@@ -267,13 +268,13 @@ uint game_running(void) {
 	set_led(LED5, 1);
 	set_led(LED7, 1);
 
-	chThdSleepMilliseconds(1000);
+	chThdSleepSeconds(1);
 	set_led(LED3, 0);
-	chThdSleepMilliseconds(1000);
+	chThdSleepSeconds(1);
 	set_led(LED5, 0);
-	chThdSleepMilliseconds(1000);
+	chThdSleepSeconds(1);
 	set_led(LED7, 0);
-	chThdSleepMilliseconds(1000);
+	chThdSleepSeconds(1);
 	set_led(LED1, 0);
 
 	statusAudioCommand(TRUE);
@@ -328,9 +329,9 @@ void set_player_led_configuration(led_conf_name_t led_conf,
 */
 void body_led_confirm(void) {
 	set_body_led(0);
-	chThdSleepMilliseconds(1000);
+	chThdSleepSeconds(1);
 	set_body_led(1);
-	chThdSleepMilliseconds(1000);
+	chThdSleepSeconds(1);
 	set_body_led(0);
 }
 
