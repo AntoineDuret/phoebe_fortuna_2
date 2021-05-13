@@ -1,3 +1,11 @@
+/*
+  \file   	main.c
+  \author 	Antoine Duret & Carla Schmid (Group G08)
+  \date   	13.05.2021
+  \version	2.2
+  \brief  	Program main file
+*/
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +36,6 @@
 #include "usbcfg.h"
 #include "uc_usage.h"
 #include "cmd.h"
-
-#include <chmtx.h>
 
 
 messagebus_t bus;
@@ -168,12 +174,12 @@ uint8_t game_setting(void) {
 
 /*
 *	Simple function used to manage the desired LED display corresponding to a
-*	given selector position. Please see the report, appendix A4.
+*	given selector position. Please see the report appendices.
 */
 void led_selector_management(int selector_pos) {
 	switch(selector_pos) {
 		case 0: // waiting state
-			set_player_led_configuration(FULL, 0, 0, 0);
+			set_player_led_configuration(FULL, NO_LIGHT);
 			break;
 
 		case 1: // player 1
@@ -294,7 +300,7 @@ uint game_running(void) {
 
 
 /*
-*	Simple function used to show the LED ID of a player associated with a selector position
+*	Simple function used to show the LED ID of a player associated with a selector position.
 *
 *	params :
 *	led_conf_name_t led_conf	one of the three RGB LED configurations defined
@@ -311,13 +317,13 @@ void set_player_led_configuration(led_conf_name_t led_conf,
     	set_rgb_led(3, red_i, green_i, blue_i);
 	} else if(led_conf == 1) {
 		set_rgb_led(0, red_i, green_i, blue_i);
-		set_rgb_led(1, 0, 0, 0);
-		set_rgb_led(2, 0, 0, 0);
+		set_rgb_led(1, NO_LIGHT);
+		set_rgb_led(2, NO_LIGHT);
     	set_rgb_led(3, red_i, green_i, blue_i);
 	} else if(led_conf == 2) {
-		set_rgb_led(0, 0, 0, 0);
+		set_rgb_led(0, NO_LIGHT);
 		set_rgb_led(1, red_i, green_i, blue_i);
-		set_rgb_led(2, 0, 0, 0);
+		set_rgb_led(2, NO_LIGHT);
     	set_rgb_led(3, red_i, green_i, blue_i);
 	}
 }

@@ -1,3 +1,11 @@
+/*
+  \file   	audio_processing.c
+  \author 	Antoine Duret & Carla Schmid (Group G08)
+  \date   	13.05.2021
+  \version	2.0
+  \brief  	Code for audio processing related tasks
+*/
+
 #include <arm_math.h>
 #include <arm_const_structs.h>
 
@@ -14,8 +22,6 @@
 #include "audio/microphone.h"
 #include "motors.h"
 #include "usbcfg.h"
-
-#include "chbsem.h"
 
 
 /*======================================================================================*/
@@ -44,7 +50,7 @@ static uint8_t mid_freq = MID_FREQ;
 
 
 // Thread for microphone input
-static THD_WORKING_AREA(micInput_thd_wa, 2048); 		// /!\ watch taille pour ce thread et autre thread gestion de selcteur
+static THD_WORKING_AREA(micInput_thd_wa, 2048);
 static THD_FUNCTION(micInput_thd, arg) {
     (void)arg;
     chRegSetThreadName(__FUNCTION__);
