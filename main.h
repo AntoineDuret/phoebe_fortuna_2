@@ -16,12 +16,6 @@ extern "C" {
 #define	NB_PLAYERS_MAX			15
 #define SELECT_PLAYER_DELAY		25
 
-// Geometrical parameters of the e-puck2
-#define WHEEL_PERIMETER     12.5f 					// in [cm]
-#define WHEEL_DISTANCE      5.1f    				// e-puck2 diameter in [cm]
-#define PERIMETER_EPUCK     (PI*WHEEL_DISTANCE)		// e-puck2 perimeter in [cm]
-#define NSTEP_ONE_TURN      1000 					// number of steps for 1 turn of the wheel
-
 // List of the RGB LED configurations
 typedef enum {
 	FULL,
