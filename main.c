@@ -65,7 +65,7 @@ int main(void) {
 	obstacle_det_start();
 	VL53L0X_start();			// ToF init
     mic_start(&process_audio_data);
-    mic_input_start();
+//    mic_input_start();
     process_image_start();
 
     uint8_t nbPlayers = 0;
