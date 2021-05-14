@@ -26,7 +26,7 @@
 #include "motors.h"
 
 
-static bool line_found = FALSE;
+static bool lines_found = FALSE;
 static bool goal_detection = FALSE;
 
 
@@ -60,73 +60,63 @@ void detect_line(uint8_t *buffer) {
 			wrong_line = 0;
 
 			// Search for a begin
-			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)) {
+			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
 				if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
 					begin = i;
 					stop = 1;
 				}
 
-				i += WIDTH_SLOPE;
+				i++;//+= WIDTH_SLOPE;
 			}
 
-			// If begin was found search for an end
-			if((i < (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)) && begin) {
+			// If begin was found, search for an end
+			if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
 				stop = 0;
 
-				// Check if during the minimal line width, the signal is higher than the mean.
-				while(stop == 0 && (i < begin + MIN_LINE_WIDTH)) {
-					if(buffer[i] > mean) {
+				while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
+					if((buffer[i] > mean) && (buffer[i-WIDTH_SLOPE] < mean)) {
+						end = i;
 						stop = 1;
 					}
+
 					i++;
 				}
 
-				// If the signal passes the mean, it was not a line, else search for an end.
-				if(stop) {
-					wrong_line = 1;
-				} else {
-					while (stop == 0 && (i <= IMAGE_BUFFER_SIZE)) {
-						if((buffer[i] > mean) && (buffer[i-WIDTH_SLOPE] < mean)) {
-							end = i;
-							stop = 1;
-						}
-						i++;
-					}
-				}
-
-				if(!end) { 	// if an end was not found  // i > IMAGE_BUFFER_SIZE ||
+				if((i >= IMAGE_BUFFER_SIZE) || !end) { 	// if no end was found
 					line_not_found = 1;
 				}
 			} else {									// if no begin was found
 				line_not_found = 1;
 			}
 
-			// If a line has been detected
-			if(!line_not_found) {
-				counter_lines++;
+			// If too small has been detected, continue the search
+			if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
+				i = end;
+				begin = 0;
+				end = 0;
+				stop = 0;
+				wrong_line = 1;
 			}
-
-			i = end;
-			begin = 0;
-			end = 0;
-			stop = 0;
-
-
 		} while(wrong_line);
 
-	} while((counter_lines < MIN_GOAL_LINES) || line_not_found);
+//	if(!line_not_found) {
+//		lines_found = TRUE;
+//	} else {
+//		lines_found = FALSE;
+//	}
+
+		if(!line_not_found) {
+			counter_lines++;
+		}
+	} while((!line_not_found) || (i > (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)));
 
 	if(counter_lines >= MIN_GOAL_LINES) {
-		line_found = TRUE;
+		lines_found = TRUE;
 	} else {
-		line_found = FALSE;
+		lines_found = FALSE;
 	}
-	counter_lines = 0;
-	i = 0;
-	line_not_found = 0;
-	mean = 0;
+	i = 0, begin = 0, end = 0, stop = 0, wrong_line = 0, line_not_found = 0, mean = 0, counter_lines = 0;
 }
-
 
 static THD_WORKING_AREA(waCaptureImage, 256);
 static THD_FUNCTION(CaptureImage, arg) {
@@ -198,7 +188,7 @@ bool verify_finish_line(void) {
 	bool goal_detected = FALSE;
 	if(goal_detection) {
 		//if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
-			if(line_found) {
+			if(lines_found) {
 				goal_detected = TRUE;
 
 				status_audio_command(FALSE);
@@ -244,7 +234,7 @@ void return_to_start_line(void) {
 	turn_left_degrees(50);
 
 	time = chVTGetSystemTime();
-	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE)) {
+	while ((lines_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE)) {
 		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
 		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
 		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
