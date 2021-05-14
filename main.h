@@ -16,7 +16,7 @@ extern "C" {
 
 // User has a delay to stay on a selector position before nbPlayers is set and saved.
 // This delay is given by: 		delay = (PLAYER_SELECT_DELAY*0.1) [s]	(see game_setting function)
-#define	PLAYER_SELECT_DELAY		25
+#define	PLAYER_SELECT_DELAY		17
 
 // List of the RGB LED configurations
 typedef enum {
