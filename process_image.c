@@ -67,19 +67,30 @@ void detect_line(uint8_t *buffer) {
 				}
 
 				i++;
+				i += WIDTH_SLOPE;
 			}
 
-			// If begin was found, search for an end
-			if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
+			// If begin was found, check if during minimal distance the signal is smaller than the mean and then search for an end
+			if((i < (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)) && begin) {
 				stop = 0;
 
-				while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
-					if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
-						end = i;
+				while(stop == 0 && (i < begin + MIN_LINE_WIDTH)) {
+					if(buffer[i] > mean) {
 						stop = 1;
 					}
-
 					i++;
+				}
+
+				if(stop) {
+					wrong_line = 1;
+				} else {
+					while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
+						if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
+							end = i;
+							stop = 1;
+						}
+						i++;
+					}
 				}
 
 				if(i > IMAGE_BUFFER_SIZE || !end) { 	// if an end was not found
@@ -89,11 +100,8 @@ void detect_line(uint8_t *buffer) {
 				line_not_found = 1;
 			}
 
-			// If too small has been detected, continue the search
-			if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
-
-				wrong_line = 1;
-			} else { // a line has been detected
+			// If a line has been detected
+			if(!line_not_found) {
 				counter_lines++;
 			}
 
@@ -103,6 +111,7 @@ void detect_line(uint8_t *buffer) {
 			stop = 0;
 
 		} while(wrong_line);
+
 	} while((counter_lines < MIN_GOAL_LINES) || line_not_found);
 
 	if(counter_lines == MIN_GOAL_LINES) {
