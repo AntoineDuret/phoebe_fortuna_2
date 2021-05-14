@@ -224,8 +224,8 @@ void return_to_start_line(void) {
 	time = chVTGetSystemTime();
 	while ((line_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE)) {
 		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
-		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
-		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
+		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*3 - 2*prox_values.delta[1];
+		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*3 - 2*prox_values.delta[6];
 		right_motor_set_speed(rightSpeed);
 		left_motor_set_speed(leftSpeed);
 		chThdSleepUntilWindowed(time, time + MS2ST(15)); // Refresh @ 100 Hz.

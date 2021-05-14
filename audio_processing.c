@@ -50,39 +50,6 @@ static bool voice_calibration_on = 0;
 static uint8_t mid_freq = MID_FREQ;
 
 
-//// Thread for microphone input
-//static THD_WORKING_AREA(micInput_thd_wa, 2048);
-//static THD_FUNCTION(micInput_thd, arg) {
-//    (void)arg;
-//    chRegSetThreadName(__FUNCTION__);
-//
-//    while(1) {
-//      	float* bufferCmplxInput = get_audio_buffer_ptr(LEFT_CMPLX_INPUT);
-////      						get_audio_buffer_ptr(RIGHT_CMPLX_INPUT)
-////								get_audio_buffer_ptr(FRONT_CMPLX_INPUT)
-////								get_audio_buffer_ptr(BACK_CMPLX_INPUT)
-//
-//        float* bufferOutput = get_audio_buffer_ptr(LEFT_OUTPUT);
-////      						get_audio_buffer_ptr(RIGHT_OUTPUT)
-////								get_audio_buffer_ptr(FRONT_OUTPUT)
-////								get_audio_buffer_ptr(BACK_OUTPUT)
-//
-//        uint16_t size = receive_int16_from_computer((BaseSequentialStream *) &SD3,
-//        													bufferCmplxInput, FFT_SIZE);
-//
-//        if(size == FFT_SIZE) {
-//            /*   Optimized FFT   */
-//        	chSysLock();
-//            doFFT_optimized(FFT_SIZE, bufferCmplxInput);
-//            arm_cmplx_mag_f32(bufferCmplxInput, bufferOutput, FFT_SIZE);
-//            chSysUnlock();
-//        }
-//
-//        chThdSleepMilliseconds(100); // sensors 100 Hz, PID 10Hz,
-//    }
-//}
-
-
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
@@ -175,14 +142,6 @@ void doFFT_optimized(uint16_t size, float* complex_buffer) {
 }
 
 
-///*
-//*	Simple function to put the invoking thread into sleep until it can process the audio data
-//*/
-//void wait_send_to_computer(void){
-//	chBSemWait(&sendToComputer_sem);
-//}
-
-
 /*
 *	Returns the pointer to the BUFFER_NAME_t buffer asked
 */
@@ -221,14 +180,6 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name) {
 /*======================================================================================*/
 /* 									 NEW FUNCTIONS										*/
 /*======================================================================================*/
-
-///*
-//*	Function to start the THREAD controlling the mic.
-//*/
-//void mic_input_start(void) {
-//	chThdCreateStatic(micInput_thd_wa, sizeof(micInput_thd_wa), NORMALPRIO, micInput_thd, NULL);
-//}
-
 
 /*
 *	Function defined to do the voice calibration for each player before their game.
@@ -361,4 +312,6 @@ void status_voice_calibration(bool status) {
 */
 bool get_status_voice_calibration(void) {
 	return voice_calibration_on;
+}
+
 }
