@@ -36,12 +36,14 @@ typedef enum {
 
 void process_audio_data(int16_t *data, uint16_t num_samples);
 void doFFT_optimized(uint16_t size, float* complex_buffer);
+void wait_send_to_computer(void);
 float* get_audio_buffer_ptr(BUFFER_NAME_t name);
 
 
 /*======================================================================================*/
 /* 								NEW FUNCTIONS DEFINED									*/
 /*======================================================================================*/
+void mic_input_start(void);
 void player_voice_calibration(float* data);
 void sound_remote(float* data);
 void status_audio_command(bool status);
