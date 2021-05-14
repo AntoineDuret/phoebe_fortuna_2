@@ -77,7 +77,6 @@ void detect_line(uint8_t *buffer) {
 					if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
 						end = i;
 						stop = 1;
-						counter_lines++;
 					}
 
 					i++;
@@ -92,12 +91,17 @@ void detect_line(uint8_t *buffer) {
 
 			// If too small has been detected, continue the search
 			if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
-				i = end;
-				begin = 0;
-				end = 0;
-				stop = 0;
+
 				wrong_line = 1;
+			} else { // a line has been detected
+				counter_lines++;
 			}
+
+			i = end;
+			begin = 0;
+			end = 0;
+			stop = 0;
+
 		} while(wrong_line);
 	} while((counter_lines < MIN_GOAL_LINES) || line_not_found);
 
