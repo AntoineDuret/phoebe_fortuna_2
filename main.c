@@ -34,6 +34,7 @@
 #include "motors.h"
 #include "msgbus/messagebus.h"
 #include "parameter/parameter.h"
+#include "spi_comm.h"
 #include "selector.h"
 #include "usbcfg.h"
 #include "uc_usage.h"
@@ -63,6 +64,7 @@ int main(void) {
 	motors_init();				// motors
 	proximity_start();			// IR proximity detection
 	obstacle_det_start();
+	spi_comm_start();
 	VL53L0X_start();			// ToF init
     mic_start(&process_audio_data);
     process_image_start();
