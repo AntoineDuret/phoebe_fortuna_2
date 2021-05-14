@@ -1,8 +1,8 @@
 /*
   \file   	main.c
   \author 	Antoine Duret & Carla Schmid (Group G08)
-  \date   	13.05.2021
-  \version	3.0
+  \date   	14.05.2021
+  \version	3.1
   \brief  	Main functions and LED management
 */
 
@@ -66,7 +66,7 @@ int main(void) {
 	obstacle_det_start();
 	spi_comm_start();
 	VL53L0X_start();			// ToF init
-    mic_start(&process_audio_data);
+	mic_start(&process_audio_data);
     process_image_start();
 
     uint8_t nbPlayers = 0;
