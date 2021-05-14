@@ -82,7 +82,7 @@ int main(void) {
 
         	while(currentPlayer != 0) {
         		currentPlayer--;
-        		player_voice_config();
+        		//player_voice_config();
         		tabPlayers[currentPlayer] = game_running();
         		set_body_led(1);
 
@@ -277,7 +277,7 @@ void player_voice_config(void) {
 */
 uint game_running(void) {
 	systime_t time;
-	set_led(LED1, 1);
+	/*set_led(LED1, 1);
 	set_led(LED3, 1);
 	set_led(LED5, 1);
 	set_led(LED7, 1);
@@ -289,7 +289,7 @@ uint game_running(void) {
 	chThdSleepSeconds(1);
 	set_led(LED7, 0);
 	chThdSleepSeconds(1);
-	set_led(LED1, 0);
+	set_led(LED1, 0);*/
 
 	status_audio_command(TRUE);
     status_obst_detection(TRUE);

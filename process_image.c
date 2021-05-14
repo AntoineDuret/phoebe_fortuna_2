@@ -60,20 +60,20 @@ void detect_line(uint8_t *buffer) {
 			wrong_line = 0;
 
 			// Search for a begin
-			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
+			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)) {
 				if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
 					begin = i;
 					stop = 1;
 				}
 
-				i++;
 				i += WIDTH_SLOPE;
 			}
 
-			// If begin was found, check if during minimal distance the signal is smaller than the mean and then search for an end
+			// If begin was found search for an end
 			if((i < (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)) && begin) {
 				stop = 0;
 
+				// Check if during the minimal line width, the signal is higher than the mean.
 				while(stop == 0 && (i < begin + MIN_LINE_WIDTH)) {
 					if(buffer[i] > mean) {
 						stop = 1;
@@ -81,11 +81,12 @@ void detect_line(uint8_t *buffer) {
 					i++;
 				}
 
+				// If the signal passes the mean, it was not a line, else search for an end.
 				if(stop) {
 					wrong_line = 1;
 				} else {
-					while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
-						if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
+					while (stop == 0 && (i <= IMAGE_BUFFER_SIZE)) {
+						if((buffer[i] > mean) && (buffer[i-WIDTH_SLOPE] < mean)) {
 							end = i;
 							stop = 1;
 						}
@@ -93,7 +94,7 @@ void detect_line(uint8_t *buffer) {
 					}
 				}
 
-				if(i > IMAGE_BUFFER_SIZE || !end) { 	// if an end was not found
+				if(!end) { 	// if an end was not found  // i > IMAGE_BUFFER_SIZE ||
 					line_not_found = 1;
 				}
 			} else {									// if no begin was found
@@ -110,16 +111,20 @@ void detect_line(uint8_t *buffer) {
 			end = 0;
 			stop = 0;
 
+
 		} while(wrong_line);
 
 	} while((counter_lines < MIN_GOAL_LINES) || line_not_found);
 
-	if(counter_lines == MIN_GOAL_LINES) {
+	if(counter_lines >= MIN_GOAL_LINES) {
 		line_found = TRUE;
 	} else {
 		line_found = FALSE;
 	}
 	counter_lines = 0;
+	i = 0;
+	line_not_found = 0;
+	mean = 0;
 }
 
 
@@ -192,7 +197,7 @@ void process_image_start(void) {
 bool verify_finish_line(void) {
 	bool goal_detected = FALSE;
 	if(goal_detection) {
-		if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
+		//if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
 			if(line_found) {
 				goal_detected = TRUE;
 
@@ -203,7 +208,7 @@ bool verify_finish_line(void) {
 				left_motor_set_speed(0);
 				right_motor_set_speed(0);
 
-			}
+		//	}
 		}
 	}
 
