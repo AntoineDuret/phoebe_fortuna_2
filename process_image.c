@@ -47,62 +47,66 @@ void detect_line(uint8_t *buffer) {
 	volatile uint16_t i = 0, begin = 0, end = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
 	uint32_t mean = 0;
+	uint8_t counter_lines = 0;
 
 	// Performs an average
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
 		mean += buffer[i];
 	}
-
 	mean /= IMAGE_BUFFER_SIZE;
 
 	do {
-		wrong_line = 0;
+		do {
+			wrong_line = 0;
 
-		// Search for a begin
-		while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
-			if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
-				begin = i;
-				stop = 1;
-			}
-
-			i++;
-		}
-
-		// If begin was found, search for an end
-		if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
-			stop = 0;
-
-			while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
-				if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
-					end = i;
+			// Search for a begin
+			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
+				if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
+					begin = i;
 					stop = 1;
 				}
 
 				i++;
 			}
 
-			if(i > IMAGE_BUFFER_SIZE || !end) { 	// if an end was not found
+			// If begin was found, search for an end
+			if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
+				stop = 0;
+
+				while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
+					if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean) {
+						end = i;
+						stop = 1;
+						counter_lines++;
+					}
+
+					i++;
+				}
+
+				if(i > IMAGE_BUFFER_SIZE || !end) { 	// if an end was not found
+					line_not_found = 1;
+				}
+			} else {									// if no begin was found
 				line_not_found = 1;
 			}
-		} else {									// if no begin was found
-			line_not_found = 1;
-		}
 
-		// If too small has been detected, continue the search
-		if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
-			i = end;
-			begin = 0;
-			end = 0;
-			stop = 0;
-			wrong_line = 1;
-		}
-	} while(wrong_line);
+			// If too small has been detected, continue the search
+			if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
+				i = end;
+				begin = 0;
+				end = 0;
+				stop = 0;
+				wrong_line = 1;
+			}
+		} while(wrong_line);
+	} while((counter_lines < MIN_GOAL_LINES) || line_not_found);
 
-	if(line_not_found) {
-		line_found = FALSE;
-	} else {
+	if(counter_lines == MIN_GOAL_LINES) {
 		line_found = TRUE;
+	} else {
+		line_found = FALSE;
 	}
+	counter_lines = 0;
 }
 
 

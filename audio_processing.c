@@ -313,5 +313,3 @@ void status_voice_calibration(bool status) {
 bool get_status_voice_calibration(void) {
 	return voice_calibration_on;
 }
-
-}
