@@ -91,7 +91,7 @@ int main(void) {
 
         			// Wait till next player is ready
         			while(get_selector() != currentPlayer) {
-        				chThdSleepMilliseconds(300);
+        				chThdSleepMilliseconds(150);
         				led_selector_management(get_selector());
         			}
 
@@ -156,7 +156,7 @@ uint8_t game_setting(void) {
 
 		do {
 			led_selector_management(get_selector());
-			chThdSleepMilliseconds(300);
+			chThdSleepMilliseconds(150);
 			i++;
 		} while (i < PLAYER_SELECT_DELAY);
 
