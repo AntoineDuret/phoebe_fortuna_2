@@ -281,11 +281,11 @@ uint game_running(void) {
 	set_led(LED7, 1);
 
 	chThdSleepSeconds(1);
-	set_led(LED3, 0);
+	set_led(LED7, 0);
 	chThdSleepSeconds(1);
 	set_led(LED5, 0);
 	chThdSleepSeconds(1);
-	set_led(LED7, 0);
+	set_led(LED3, 0);
 	chThdSleepSeconds(1);
 	set_led(LED1, 0);
 

@@ -5,11 +5,12 @@
 
 // Parameters for line detection with embedded camera
 #define IMAGE_BUFFER_SIZE		640
-#define WIDTH_SLOPE				10 		//pixel (before 5)
-#define MIN_LINE_WIDTH			155
+#define WIDTH_SLOPE				5
+#define MIN_LINE_WIDTH			40
 #define GOAL_DIST_MIN			30
 #define GOAL_DIST_MAX			120
-#define MIN_DIFF_IMAGE_MEANS	80
+#define MIN_GOAL_LINES			5
+#define MINIMAL_TIME_RETURN		8000
 
 // Geometrical parameters of the e-puck2
 #define WHEEL_PERIMETER     12.5f 					// in [cm]
