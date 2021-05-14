@@ -55,7 +55,7 @@ void detect_line(uint8_t *buffer) {
 	}
 	mean /= IMAGE_BUFFER_SIZE;
 
-	do {
+	for(i = 0; i < IMAGE_BUFFER_SIZE ; i++) {
 		do {
 			wrong_line = 0;
 
@@ -99,23 +99,16 @@ void detect_line(uint8_t *buffer) {
 			}
 		} while(wrong_line);
 
-//	if(!line_not_found) {
-//		lines_found = TRUE;
-//	} else {
-//		lines_found = FALSE;
-//	}
-
 		if(!line_not_found) {
 			counter_lines++;
 		}
-	} while((!line_not_found) || (i > (IMAGE_BUFFER_SIZE - MIN_LINE_WIDTH)));
+	}
 
 	if(counter_lines >= MIN_GOAL_LINES) {
 		lines_found = TRUE;
 	} else {
 		lines_found = FALSE;
 	}
-	i = 0, begin = 0, end = 0, stop = 0, wrong_line = 0, line_not_found = 0, mean = 0, counter_lines = 0;
 }
 
 static THD_WORKING_AREA(waCaptureImage, 256);
@@ -144,7 +137,7 @@ static THD_FUNCTION(CaptureImage, arg) {
 }
 
 
-static THD_WORKING_AREA(waProcessImage, 1024);
+static THD_WORKING_AREA(waProcessImage, 2048);
 static THD_FUNCTION(ProcessImage, arg) {
 
     chRegSetThreadName(__FUNCTION__);
@@ -187,7 +180,7 @@ void process_image_start(void) {
 bool verify_finish_line(void) {
 	bool goal_detected = FALSE;
 	if(goal_detection) {
-		//if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
+		if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
 			if(lines_found) {
 				goal_detected = TRUE;
 
@@ -198,7 +191,7 @@ bool verify_finish_line(void) {
 				left_motor_set_speed(0);
 				right_motor_set_speed(0);
 
-		//	}
+			}
 		}
 	}
 
@@ -234,7 +227,8 @@ void return_to_start_line(void) {
 	turn_left_degrees(50);
 
 	time = chVTGetSystemTime();
-	while ((lines_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE)) {
+	while ((lines_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE) ||
+			(chVTGetSystemTime() - time < MINIMAL_TIME_RETURN)) {
 		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
 		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*2 - prox_values.delta[1];
 		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*2 - prox_values.delta[6];
@@ -246,17 +240,17 @@ void return_to_start_line(void) {
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
-	// Go forward 6 cm
-	go_forward_cm(6);
+	// Go forward 7 cm
+	go_forward_cm(7);
 
-	// Turn right for 75°
-	turn_right_degrees(75);
+	// Turn right for 80°
+	turn_right_degrees(80);
 
 	// Go forward 28 cm
 	go_forward_cm(28);
 
 	// Turn right for 75°
-	turn_right_degrees(75);
+	turn_right_degrees(80);
 
 	status_audio_command(FALSE);
 	status_voice_calibration(FALSE);
