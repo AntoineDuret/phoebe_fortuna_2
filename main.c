@@ -16,7 +16,7 @@
 #include "ch.h"
 #include "chprintf.h"
 #include "hal.h"
-#include "shell.h"
+//#include "shell.h"
 
 #include "audio_processing.h"
 #include "main.h"
@@ -31,12 +31,12 @@
 
 #include "leds.h"
 #include "motors.h"
-#include "msgbus/messagebus.h"
+//#include "msgbus/messagebus.h"
 #include "parameter/parameter.h"
 #include "spi_comm.h"
 #include "selector.h"
-#include "usbcfg.h"
-#include "uc_usage.h"
+//#include "usbcfg.h"
+//#include "uc_usage.h"
 
 
 #define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
