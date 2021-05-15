@@ -31,7 +31,7 @@
 
 #include "leds.h"
 #include "motors.h"
-//#include "msgbus/messagebus.h"
+#include "msgbus/messagebus.h"
 #include "parameter/parameter.h"
 #include "spi_comm.h"
 #include "selector.h"
