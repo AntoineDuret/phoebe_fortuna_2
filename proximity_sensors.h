@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define MIN_DIST_OBST		1000	// Experimental value
+#define MIN_DIST_OBST		950	// Experimental value
 
 void obstacle_det_start(void);
 void obstacle_detection(void);

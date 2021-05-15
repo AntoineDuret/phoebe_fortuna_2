@@ -89,9 +89,10 @@ int main(void) {
         			return_to_start_line();
 
         			// Wait till next player is ready
-        			while(get_selector() != currentPlayer) {
+        			do {
+        				chThdSleepMilliseconds(150);
         				led_selector_management(get_selector());
-        			}
+        			} while(get_selector() != currentPlayer);
 
         			// Confirm selector state
         			body_led_confirm();
