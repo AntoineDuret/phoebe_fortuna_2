@@ -1,16 +1,16 @@
 #ifndef AUDIO_PROCESSING_H
 #define AUDIO_PROCESSING_H
 
-#define GAME_SPEED				1100 	// speed of the motors (max 1100)
-#define NB_SAMPLES				40		// samples for voice calibration (max 256)
+#define GAME_SPEED				1100 	// Speed of the motors (max 1100)
+#define NB_SAMPLES				40		// Samples for voice calibration (max 256)
 
 // Frequency domain parameters & FFT parameters
 #define FFT_SIZE 				1024
-#define MIN_VALUE_THRESHOLD		10000	// to avoid noisy effects
-#define MID_FREQ				15
-#define MIN_FREQ				8
-#define MAX_FREQ				22
-#define HALF_BW					5
+#define MIN_VALUE_THRESHOLD		10000	// Threshold for audio command intensity
+#define MID_FREQ				15		// Frequency used when voice calibration is turned off
+#define MIN_FREQ				8		// Lowest acceptable frequency for voice calibration
+#define MAX_FREQ				22		// Highest acceptable frequency for voice calibration
+#define HALF_BW					5		// Half of the voice command range
 #define	ERROR_THRESHOLD			0.1f
 
 // PID regulator parameters (tuned manually)

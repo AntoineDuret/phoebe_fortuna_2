@@ -8,6 +8,7 @@
 
 #include <arm_math.h>
 #include <arm_const_structs.h>
+#include <stdbool.h>
 
 #include "ch.h"
 #include "chprintf.h"
@@ -25,7 +26,7 @@
 
 /*======================================================================================*/
 /* 						 	     REUSED CODE FROM THE TP5				    			*/
-/* 						  (with small additions and corrections)						*/
+/* 						    (with small additions and changes)							*/
 /*======================================================================================*/
 
 // Semaphore
@@ -44,8 +45,9 @@ static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 static float four_mics_output[FFT_SIZE];
 
-static bool audio_command_on = 0;
-static bool voice_calibration_on = 0;
+// Variables used to control the audio command and voice calibration
+static bool audio_command = 0;
+static bool voice_calibration = 0;
 static uint8_t mid_freq = MID_FREQ;
 
 
@@ -66,18 +68,18 @@ void process_audio_data(int16_t *data, uint16_t num_samples) {
 	static uint16_t nb_samples = 0;
 
 	// Loop to fill the buffers
-	for(uint16_t i = 0 ; i < num_samples ; i+=4) {
+	for(uint16_t i = 0 ; i < num_samples ; i += 4) {
 		// Construct an array of complex numbers. Put 0 to the imaginary part
 		micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
-		micLeft_cmplx_input[nb_samples] = (float)data[i + MIC_LEFT];
-		micBack_cmplx_input[nb_samples] = (float)data[i + MIC_BACK];
+		micLeft_cmplx_input[nb_samples]  = (float)data[i + MIC_LEFT];
+		micBack_cmplx_input[nb_samples]  = (float)data[i + MIC_BACK];
 		micFront_cmplx_input[nb_samples] = (float)data[i + MIC_FRONT];
 
 		nb_samples++;
 
 		micRight_cmplx_input[nb_samples] = 0;
-		micLeft_cmplx_input[nb_samples] = 0;
-		micBack_cmplx_input[nb_samples] = 0;
+		micLeft_cmplx_input[nb_samples]  = 0;
+		micBack_cmplx_input[nb_samples]  = 0;
 		micFront_cmplx_input[nb_samples] = 0;
 
 		nb_samples++;
@@ -93,7 +95,6 @@ void process_audio_data(int16_t *data, uint16_t num_samples) {
 		*	- FFT processing -
 		*	This FFT function stores the results in the input buffer given.
 		*	This is an "In Place" function. 
-		*	We use only the left microphone.
 		*/
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
 		doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
@@ -105,13 +106,13 @@ void process_audio_data(int16_t *data, uint16_t num_samples) {
 		*	Computes the magnitude of the complex numbers and stores them
 		*	in a buffer of FFT_SIZE because it only contains real numbers.
 		*/
-		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
+		arm_cmplx_mag_f32(micLeft_cmplx_input,  micLeft_output,  FFT_SIZE);
 		arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
-		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
+		arm_cmplx_mag_f32(micBack_cmplx_input,  micBack_output,  FFT_SIZE);
 		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 
-
-		if((voice_calibration_on)) {
+		// During the voice calibration: Take average of the 4 microphones to register sound.
+		if((voice_calibration)) {
 			for(uint16_t i = 0; i < FFT_SIZE; i++) {
 				four_mics_output[i] = (micLeft_output[i] + micRight_output[i]
 										+ micFront_output[i] + micBack_output[i])/4.0;
@@ -122,7 +123,8 @@ void process_audio_data(int16_t *data, uint16_t num_samples) {
 
 		nb_samples = 0;
 
-		if(audio_command_on) {
+		// During audio command: Take the average of the 4 microphones to pilot the robot.
+		if(audio_command) {
 			for(uint16_t i = 0; i < FFT_SIZE; i++) {
 				four_mics_output[i] = (micLeft_output[i] + micRight_output[i]
 										+ micFront_output[i] + micBack_output[i])/4.0;
@@ -206,15 +208,17 @@ void player_voice_calibration(float* data) {
 		}
 	}
 
+	// If enough intense frequency in the valid range is detected, save it.
 	if((max_norm_index != -1) && (max_norm_index >= MIN_FREQ) && (max_norm_index <= MAX_FREQ)) {
 		average_freq += max_norm_index;
 		ind_sample++;
 	}
 
+	// When enough valid samples were gathered, calculate and set the mean.
 	if(ind_sample == NB_SAMPLES) {
 		average_freq = (average_freq/ind_sample);
 		mid_freq = average_freq;
-		voice_calibration_on = FALSE;
+		voice_calibration = FALSE;
 
 		// Reset the average_freq to 0 for next calibration.
 		average_freq = 0;
@@ -232,15 +236,10 @@ void player_voice_calibration(float* data) {
 *						for one mic
 */
 void sound_remote(float* data) {
-	int16_t error = 0;
-	float speed = 0;
-
+	int16_t error = 0, max_norm_index = -1, deriv_error = 0;
 	uint16_t max_norm = MIN_VALUE_THRESHOLD;
-	int16_t max_norm_index = -1;
-
-	static int16_t sum_error = 0;
-	static int16_t previous_error = 0;
-	int16_t deriv_error = 0;
+	float speed = 0;
+	static int16_t sum_error = 0, previous_error = 0;
 
 	// Search for the highest peak
 	for(uint16_t i = mid_freq - HALF_BW ; i <= mid_freq + HALF_BW ; i++) {
@@ -251,8 +250,8 @@ void sound_remote(float* data) {
 	}
 
 	// PID regulator implementation on the speed for fine audio control.
-	// Defined with the error between the mid_freq (voice calibration) and the control freq.
-	if((max_norm_index == -1) || (audio_command_on == 0)) {
+	// Error determined by the difference between the mid_freq (voice calibration) and the control frequency.
+	if((max_norm_index == -1) || (audio_command == FALSE)) {
 		left_motor_set_speed(0);
 		right_motor_set_speed(0);
 		sum_error = 0;
@@ -296,7 +295,7 @@ void sound_remote(float* data) {
 *	bool status		status value TRUE or FALSE
 */
 void status_audio_command(bool status) {
-	audio_command_on = status;
+	audio_command = status;
 }
 
 
@@ -307,7 +306,7 @@ void status_audio_command(bool status) {
 *	bool status		status value TRUE or FALSE
 */
 void status_voice_calibration(bool status) {
-	voice_calibration_on = status;
+	voice_calibration = status;
 }
 
 
@@ -315,5 +314,5 @@ void status_voice_calibration(bool status) {
 *	Function to get the voice calibration control status.
 */
 bool get_status_voice_calibration(void) {
-	return voice_calibration_on;
+	return voice_calibration;
 }
