@@ -21,7 +21,7 @@
 #include "leds.h"
 #include "motors.h"
 
-static bool obstacle_det = FALSE;
+static bool obstacleDet = FALSE;
 
 // Thread to detect if an obstacle is close to the IR Sensors in the front of the e-puck.
 static THD_WORKING_AREA(prox_sens_thd_wa, 512);
@@ -30,7 +30,7 @@ static THD_FUNCTION(prox_sens_thd, arg) {
     chRegSetThreadName(__FUNCTION__);
 
     while(1) {
-    	if(obstacle_det) {
+    	if(obstacleDet) {
     		if((get_prox(0) > MIN_DIST_OBST) || (get_prox(1) > MIN_DIST_OBST) ||
     		   (get_prox(6) > MIN_DIST_OBST) || (get_prox(7) > MIN_DIST_OBST)) {
     			obstacle_detection();
@@ -59,7 +59,7 @@ void obstacle_detection(void) {
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 	status_goal_detection(FALSE);
-	obstacle_det = FALSE;
+	obstacleDet = FALSE;
 
 	// Show 4 red LEDs to indicate that the minimal distance to objects were not kept.
 	set_led(LED1,1);
@@ -82,7 +82,7 @@ void obstacle_detection(void) {
     // Turn on audio command
     status_audio_command(TRUE);
     status_goal_detection(TRUE);
-   	obstacle_det = TRUE;
+   	obstacleDet = TRUE;
 }
 
 
@@ -90,5 +90,5 @@ void obstacle_detection(void) {
 *	Function to control the obstacle detection command.
 */
 void status_obst_detection(bool status) {
-	obstacle_det = status;
+	obstacleDet = status;
 }
