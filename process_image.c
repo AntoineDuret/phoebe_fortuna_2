@@ -22,9 +22,7 @@
 #include "camera/po8030.h"
 #include "sensors/proximity.h"
 #include "sensors/VL53L0X/VL53L0X.h"
-#include "leds.h"
 #include "motors.h"
-
 
 static bool lines_found = FALSE;
 static bool goal_detection = FALSE;
@@ -223,6 +221,9 @@ void return_to_start_line(void) {
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
+	// Go forward 2cm
+	go_forward_cm(2);
+
 	// Turn left by 50°
 	turn_left_degrees(50);
 
@@ -243,13 +244,13 @@ void return_to_start_line(void) {
 	// Go forward 7 cm
 	go_forward_cm(7);
 
-	// Turn right for 80°
-	turn_right_degrees(80);
+	// Turn right for 77°
+	turn_right_degrees(77);
 
 	// Go forward 28 cm
 	go_forward_cm(28);
 
-	// Turn right for 75°
+	// Turn right for 80°
 	turn_right_degrees(80);
 
 	status_audio_command(FALSE);

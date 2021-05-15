@@ -14,7 +14,6 @@
 #include "hal.h"
 
 #include "audio_processing.h"
-#include "communications.h"
 #include "main.h"
 #include "process_image.h"
 #include "proximity_sensors.h"
