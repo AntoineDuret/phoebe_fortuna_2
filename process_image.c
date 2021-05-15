@@ -24,90 +24,16 @@
 #include "sensors/VL53L0X/VL53L0X.h"
 #include "motors.h"
 
-static bool lines_found = FALSE;
-static bool goal_detection = FALSE;
-
-
-/*======================================================================================*/
-/* 						 	     REUSED CODE FROM THE TP5				    			*/
-/* 						  (with small additions and corrections)						*/
-/*======================================================================================*/
+static bool linesFound = FALSE;
+static bool goalDetection = FALSE;
 
 // Semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be resolved")
 
-
-/*
-* 	Returns the line width extracted from the image buffer given.
-* 	Returns 0 if line not found.
-*/
-void detect_line(uint8_t *buffer) {
-	volatile uint16_t i = 0, begin = 0, end = 0;
-	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
-	uint32_t mean = 0;
-	uint8_t counter_lines = 0;
-
-	// Performs an average
-	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
-		mean += buffer[i];
-	}
-	mean /= IMAGE_BUFFER_SIZE;
-
-	for(i = 0; i < IMAGE_BUFFER_SIZE ; i++) {
-		do {
-			wrong_line = 0;
-
-			// Search for a begin
-			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
-				if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
-					begin = i;
-					stop = 1;
-				}
-
-				i++;//+= WIDTH_SLOPE;
-			}
-
-			// If begin was found, search for an end
-			if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
-				stop = 0;
-
-				while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
-					if((buffer[i] > mean) && (buffer[i-WIDTH_SLOPE] < mean)) {
-						end = i;
-						stop = 1;
-					}
-
-					i++;
-				}
-
-				if((i >= IMAGE_BUFFER_SIZE) || !end) { 	// if no end was found
-					line_not_found = 1;
-				}
-			} else {									// if no begin was found
-				line_not_found = 1;
-			}
-
-			// If too small has been detected, continue the search
-			if(!line_not_found && ((end-begin) < MIN_LINE_WIDTH)) {
-				i = end;
-				begin = 0;
-				end = 0;
-				stop = 0;
-				wrong_line = 1;
-			}
-		} while(wrong_line);
-
-		if(!line_not_found) {
-			counter_lines++;
-		}
-	}
-
-	if(counter_lines >= MIN_GOAL_LINES) {
-		lines_found = TRUE;
-	} else {
-		lines_found = FALSE;
-	}
-}
+/*======================================================================================*/
+/* 						 	     REUSED CODE FROM THE TP4 				    			*/
+/* 						  (with small additions and corrections)						*/
+/*======================================================================================*/
 
 static THD_WORKING_AREA(waCaptureImage, 256);
 static THD_FUNCTION(CaptureImage, arg) {
@@ -167,6 +93,76 @@ void process_image_start(void) {
 }
 
 
+/*
+* 	Counts the amount of lines found in picture and changes bool if enough lines are in detected.
+*/
+void detect_line(uint8_t *buffer) {
+	volatile uint16_t i = 0, begin = 0, end = 0;
+	uint8_t stop = 0, wrongLine = 0, lineNotFound = 0;
+	uint32_t mean = 0;
+	uint8_t counterLines = 0;
+
+	// Performs an average
+	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
+		mean += buffer[i];
+	}
+	mean /= IMAGE_BUFFER_SIZE;
+
+	for(i = 0; i < IMAGE_BUFFER_SIZE ; i++) {
+		do {
+			wrongLine = 0;
+
+			// Search for a begin
+			while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) {
+				if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean) {
+					begin = i;
+					stop = 1;
+				}
+
+				i++;//+= WIDTH_SLOPE;
+			}
+
+			// If begin was found, search for an end.
+			if((i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)) && begin) {
+				stop = 0;
+
+				while (stop == 0 && (i < IMAGE_BUFFER_SIZE)) {
+					if((buffer[i] > mean) && (buffer[i-WIDTH_SLOPE] < mean)) {
+						end = i;
+						stop = 1;
+					}
+
+					i++;
+				}
+
+				if((i >= IMAGE_BUFFER_SIZE) || !end) { 	// If no end was found
+					lineNotFound = 1;
+				}
+			} else {									// If no begin was found
+				lineNotFound = 1;
+			}
+
+			// If a too small line has been detected, continue the search.
+			if(!lineNotFound && ((end-begin) < MIN_LINE_WIDTH)) {
+				i = end;
+				begin = 0;
+				end = 0;
+				stop = 0;
+				wrongLine = 1;
+			}
+		} while(wrongLine);
+
+		if(!lineNotFound) {
+			counterLines++;
+		}
+	}
+
+	if(counterLines >= MIN_GOAL_LINES) {
+		linesFound = TRUE;
+	} else {
+		linesFound = FALSE;
+	}
+}
 
 /*======================================================================================*/
 /* 									 NEW FUNCTIONS										*/
@@ -176,11 +172,11 @@ void process_image_start(void) {
 *	Function used to check if the finish line is reached.
 */
 bool verify_finish_line(void) {
-	bool goal_detected = FALSE;
-	if(goal_detection) {
+	bool goalDetected = FALSE;
+	if(goalDetection) {
 		if((VL53L0X_get_dist_mm() <= GOAL_DIST_MAX) && (VL53L0X_get_dist_mm() >= GOAL_DIST_MIN)) {
-			if(lines_found) {
-				goal_detected = TRUE;
+			if(linesFound) {
+				goalDetected = TRUE;
 
 				status_audio_command(FALSE);
 				status_obst_detection(FALSE);
@@ -193,7 +189,7 @@ bool verify_finish_line(void) {
 		}
 	}
 
-	return goal_detected;
+	return goalDetected;
 }
 
 
@@ -204,7 +200,7 @@ bool verify_finish_line(void) {
 *	bool status		status value TRUE or FALSE
 */
 void status_goal_detection(bool status) {
-	goal_detection = status;
+	goalDetection = status;
 }
 
 
@@ -214,25 +210,24 @@ void status_goal_detection(bool status) {
 */
 void return_to_start_line(void) {
 	messagebus_topic_t *prox_topic = messagebus_find_topic_blocking(&bus, "/proximity");
-	proximity_msg_t prox_values;
+	proximity_msg_t proxValues;
 	int16_t leftSpeed = 0, rightSpeed = 0;
 	systime_t time;
 
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
-	// Go forward 2cm
+	// Go towards hallway
 	go_forward_cm(2);
-
-	// Turn left by 50°
 	turn_left_degrees(50);
 
+	// Goes through hallway till detects lines.
 	time = chVTGetSystemTime();
-	while ((lines_found == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE) ||
-			(chVTGetSystemTime() - time < MINIMAL_TIME_RETURN)) {
-		messagebus_topic_wait(prox_topic, &prox_values, sizeof(prox_values));
-		leftSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[0]*3 - 2*prox_values.delta[1];
-		rightSpeed = MOTOR_SPEED_LIMIT - prox_values.delta[7]*3 - 2*prox_values.delta[6];
+	while ((linesFound == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE) ||
+		   ((chVTGetSystemTime() - time) < MINIMAL_TIME_RETURN)) {
+		messagebus_topic_wait(prox_topic, &proxValues, sizeof(proxValues));
+		leftSpeed = MOTOR_SPEED_LIMIT - proxValues.delta[0]*3 - 2*proxValues.delta[1];
+		rightSpeed = MOTOR_SPEED_LIMIT - proxValues.delta[7]*3 - 2*proxValues.delta[6];
 		right_motor_set_speed(rightSpeed);
 		left_motor_set_speed(leftSpeed);
 		chThdSleepUntilWindowed(time, time + MS2ST(15)); // Refresh @ 100 Hz.
@@ -241,16 +236,10 @@ void return_to_start_line(void) {
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
-	// Go forward 7 cm
+	// Goes to starting position.
 	go_forward_cm(7);
-
-	// Turn right for 77°
 	turn_right_degrees(77);
-
-	// Go forward 28 cm
 	go_forward_cm(28);
-
-	// Turn right for 80°
 	turn_right_degrees(80);
 
 	status_audio_command(FALSE);
@@ -268,7 +257,7 @@ void turn_right_degrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	left_motor_set_speed(GAME_SPEED/2);
+	left_motor_set_speed(  GAME_SPEED/2);
 	right_motor_set_speed(-GAME_SPEED/2);
 
 	while(abs(right_motor_get_pos()) <=
@@ -305,7 +294,7 @@ void turn_left_degrees(uint8_t degrees) {
 
 
 /*
-*	Function to move forward of a given distance in cm.
+*	Function to move forward a given distance in cm.
 *
 *	params :
 *	uint8_t cm		value of the desired distance in cm

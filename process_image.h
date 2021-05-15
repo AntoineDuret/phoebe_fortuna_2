@@ -10,7 +10,6 @@
 #define GOAL_DIST_MIN			80
 #define GOAL_DIST_MAX			120
 #define MIN_GOAL_LINES			7
-#define MINIMAL_TIME_RETURN		8000
 
 // Geometrical parameters of the e-puck2
 #define WHEEL_PERIMETER     12.5f 					// in [cm]
@@ -20,11 +19,11 @@
 
 // Setting used for the automatic return
 #define RETURN_LINE_DETECTION_DISTANCE		160		// in [mm]
+#define MINIMAL_TIME_RETURN					8000	// in [System ticks]
 
 
-void detect_line(uint8_t *buffer);
 void process_image_start(void);
-
+void detect_line(uint8_t *buffer);
 
 /*======================================================================================*/
 /* 								NEW FUNCTIONS DEFINED									*/
@@ -35,5 +34,6 @@ void return_to_start_line(void);
 void turn_right_degrees(uint8_t degrees);
 void turn_left_degrees(uint8_t degrees);
 void go_forward_cm(uint8_t cm);
+
 
 #endif /* PROCESS_IMAGE_H */
