@@ -39,9 +39,9 @@ typedef enum {
 /* 								NEW FUNCTIONS DEFINED									*/
 /*======================================================================================*/
 uint8_t game_setting(void);
-void led_selector_management(int selector_pos);
 void player_voice_config(void);
-uint  game_running(void);
+uint game_running(void);
+void led_selector_management(int selector_pos);
 void set_player_led_configuration(led_conf_name_t led_conf,
 										uint8_t red_i, uint8_t green_i, uint8_t blue_i);
 void body_led_confirm(void);

@@ -1,6 +1,8 @@
 #ifndef AUDIO_PROCESSING_H
 #define AUDIO_PROCESSING_H
 
+#include <stdbool.h>
+
 #define GAME_SPEED				1100 	// Speed of the motors (max 1100)
 #define NB_SAMPLES				40		// Samples for voice calibration (max 256)
 

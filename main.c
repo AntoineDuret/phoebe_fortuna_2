@@ -87,13 +87,13 @@ int main(void) {
         		if(currentPlayer > 0) {
         			return_to_start_line();
 
-        			// Wait till next player is ready
+        			// Wait till next player is ready.
         			do {
         				chThdSleepMilliseconds(150);
         				led_selector_management(get_selector());
         			} while(get_selector() != currentPlayer);
 
-        			// Confirm selector state
+        			// Confirm selector state.
         			body_led_confirm();
 
         		} else { // Display the winner!
@@ -112,6 +112,7 @@ int main(void) {
 
         chThdSleepSeconds(3);
 
+        // Wait till next game is started.
         while(get_selector() != 0) {
         	chThdSleepMilliseconds(100);
         }
@@ -123,12 +124,14 @@ int main(void) {
 
 /*
 *	Function used to start a game configuration and manage the early LED
-*	communication with the user
+*	communication with the user.
+*
+*	Returns the number of players.
 */
 uint8_t game_setting(void) {
-	uint8_t selector_state = 0;
+	uint8_t selectorState = 0, i = 0;
 
-	// Waiting for the user to turn the game setting ON
+	// Waiting for the user to turn the game setting ON (Selector on position 0).
 	while(get_selector() != 0) {
 		set_led(LED1, 2);
 		set_led(LED3, 2);
@@ -144,14 +147,14 @@ uint8_t game_setting(void) {
 		set_led(LED7, 0);
 	}
 
-	// Ready to start the player configuration and selector management
+	// Ready to start the player configuration and selector management.
 	set_body_led(1);
 
-	uint8_t i = 0;
-	// Wait for the user to select the number of players
+	// Wait for the user to select the number of players.
 	do {
-		selector_state = get_selector();
+		selectorState = get_selector();
 
+		// Refreshes the LEDs and waits till selector doesn't change anymore.
 		do {
 			led_selector_management(get_selector());
 			chThdSleepMilliseconds(150);
@@ -159,11 +162,61 @@ uint8_t game_setting(void) {
 		} while (i < PLAYER_SELECT_DELAY);
 
 		i = 0;
-	} while((selector_state != get_selector()) || (get_selector() == 0));
+	} while((selectorState != get_selector()) || (get_selector() == 0));
 
 	body_led_confirm();
 
-	return selector_state;
+	return selectorState;
+}
+
+
+/*
+*	Function to display the player voice configuration before each game and for each player.
+*/
+void player_voice_config(void) {
+	chThdSleepMilliseconds(500);
+    set_front_led(1);
+    status_voice_calibration(TRUE);
+
+    while(get_status_voice_calibration()) {
+    	chThdSleepMilliseconds(300);
+    }
+
+    set_front_led(0);
+}
+
+
+/*
+*	This function is active during the game. It comes to an end when the finish line is detected.
+*	Returns the time for the player
+*/
+uint game_running(void) {
+	systime_t time;
+	set_led(LED1, 1);
+	set_led(LED3, 1);
+	set_led(LED5, 1);
+	set_led(LED7, 1);
+
+	chThdSleepSeconds(1);
+	set_led(LED7, 0);
+	chThdSleepSeconds(1);
+	set_led(LED5, 0);
+	chThdSleepSeconds(1);
+	set_led(LED3, 0);
+	chThdSleepSeconds(1);
+	set_led(LED1, 0);
+
+	status_audio_command(TRUE);
+    status_obst_detection(TRUE);
+    status_goal_detection(TRUE);
+
+    time = chVTGetSystemTime();
+
+    while (!verify_finish_line()) {
+    	chThdSleepMilliseconds(200);
+    }
+
+	return (chVTGetSystemTime() - time);
 }
 
 
@@ -171,8 +224,8 @@ uint8_t game_setting(void) {
 *	Simple function used to manage the desired LED display corresponding to a
 *	given selector position
 */
-void led_selector_management(int selector_pos) {
-	switch(selector_pos) {
+void led_selector_management(int selectorPos) {
+	switch(selectorPos) {
 		case 0: // waiting state
 			set_player_led_configuration(FULL, NO_LIGHT);
 			break;
@@ -241,6 +294,36 @@ void led_selector_management(int selector_pos) {
 
 
 /*
+*	Simple function used to show the LED ID of a player associated with a selector position
+*
+*	params :
+*	led_conf_name_t ledConf		one of the three RGB LED configurations defined
+*	uint8_t red_i					*
+*	uint8_t green_i					* values corresponding with one of the five RGB colors defined
+*	uint8_t blue_i					*
+*/
+void set_player_led_configuration(led_conf_name_t ledConf,
+										uint8_t red_i, uint8_t green_i, uint8_t blue_i) {
+	if(ledConf == 0) {
+		set_rgb_led(0, red_i, green_i, blue_i);
+    	set_rgb_led(1, red_i, green_i, blue_i);
+    	set_rgb_led(2, red_i, green_i, blue_i);
+    	set_rgb_led(3, red_i, green_i, blue_i);
+	} else if(ledConf == 1) {
+		set_rgb_led(0, red_i, green_i, blue_i);
+		set_rgb_led(1, NO_LIGHT);
+		set_rgb_led(2, NO_LIGHT);
+    	set_rgb_led(3, red_i, green_i, blue_i);
+	} else if(ledConf == 2) {
+		set_rgb_led(0, NO_LIGHT);
+		set_rgb_led(1, red_i, green_i, blue_i);
+		set_rgb_led(2, NO_LIGHT);
+    	set_rgb_led(3, red_i, green_i, blue_i);
+	}
+}
+
+
+/*
 * Simple function defined to apply the abstraction and reuse principle.
 * Desired display to confirm something to the player with the body led.
 */
@@ -250,88 +333,6 @@ void body_led_confirm(void) {
 	set_body_led(1);
 	chThdSleepSeconds(1);
 	set_body_led(0);
-}
-
-
-/*
-*	Function to display the player voice configuration before each game and for each player.
-*/
-void player_voice_config(void) {
-	chThdSleepMilliseconds(500);
-    set_front_led(1);
-    status_voice_calibration(TRUE);
-
-    while(get_status_voice_calibration()) {
-    	chThdSleepMilliseconds(300);
-    }
-
-    set_front_led(0);
-}
-
-
-/*
-*	This function is active during the game. It comes to an end when the finish line is detected.
-*	Returns the time for the player
-*/
-uint game_running(void) {
-	systime_t time;
-	set_led(LED1, 1);
-	set_led(LED3, 1);
-	set_led(LED5, 1);
-	set_led(LED7, 1);
-
-	chThdSleepSeconds(1);
-	set_led(LED7, 0);
-	chThdSleepSeconds(1);
-	set_led(LED5, 0);
-	chThdSleepSeconds(1);
-	set_led(LED3, 0);
-	chThdSleepSeconds(1);
-	set_led(LED1, 0);
-
-	status_audio_command(TRUE);
-    status_obst_detection(TRUE);
-    status_goal_detection(TRUE);
-
-    time = chVTGetSystemTime();
-
-    while (!verify_finish_line()) {
-    	chThdSleepMilliseconds(200);
-    }
-
-    time = chVTGetSystemTime() - time;
-
-	return time;
-}
-
-
-/*
-*	Simple function used to show the LED ID of a player associated with a selector position
-*
-*	params :
-*	led_conf_name_t led_conf		one of the three RGB LED configurations defined
-*	uint8_t red_i					*
-*	uint8_t green_i					* values corresponding with one of the five RGB colors defined
-*	uint8_t blue_i					*
-*/
-void set_player_led_configuration(led_conf_name_t led_conf,
-										uint8_t red_i, uint8_t green_i, uint8_t blue_i) {
-	if(led_conf == 0) {
-		set_rgb_led(0, red_i, green_i, blue_i);
-    	set_rgb_led(1, red_i, green_i, blue_i);
-    	set_rgb_led(2, red_i, green_i, blue_i);
-    	set_rgb_led(3, red_i, green_i, blue_i);
-	} else if(led_conf == 1) {
-		set_rgb_led(0, red_i, green_i, blue_i);
-		set_rgb_led(1, NO_LIGHT);
-		set_rgb_led(2, NO_LIGHT);
-    	set_rgb_led(3, red_i, green_i, blue_i);
-	} else if(led_conf == 2) {
-		set_rgb_led(0, NO_LIGHT);
-		set_rgb_led(1, red_i, green_i, blue_i);
-		set_rgb_led(2, NO_LIGHT);
-    	set_rgb_led(3, red_i, green_i, blue_i);
-	}
 }
 
 
