@@ -119,7 +119,7 @@ void detect_line(uint8_t *buffer) {
 					stop = 1;
 				}
 
-				i++;//+= WIDTH_SLOPE;
+				i += WIDTH_SLOPE;
 			}
 
 			// If begin was found, search for an end.
@@ -154,6 +154,9 @@ void detect_line(uint8_t *buffer) {
 
 		if(!lineNotFound) {
 			counterLines++;
+			begin = 0;
+			end = 0;
+			stop = 0;
 		}
 	}
 
