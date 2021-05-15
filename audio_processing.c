@@ -146,43 +146,6 @@ void doFFT_optimized(uint16_t size, float* complex_buffer) {
 	}
 }
 
-
-/*
-*	Returns the pointer to the BUFFER_NAME_t buffer asked
-*/
-float* get_audio_buffer_ptr(BUFFER_NAME_t name) {
-	if(name == LEFT_CMPLX_INPUT) {
-		return micLeft_cmplx_input;
-	}
-//	}
-//	else if(name == RIGHT_CMPLX_INPUT) {
-//		return micRight_cmplx_input;
-//	}
-//	else if(name == FRONT_CMPLX_INPUT) {
-//		return micFront_cmplx_input;
-//	}
-//	else if(name == BACK_CMPLX_INPUT) {
-//		return micBack_cmplx_input;
-//	}
-	else if(name == LEFT_OUTPUT) {
-		return micLeft_output;
-	}
-//	else if(name == RIGHT_OUTPUT) {
-//		return micRight_output;
-//	}
-//	else if(name == FRONT_OUTPUT) {
-//		return micFront_output;
-//	}
-//	else if(name == BACK_OUTPUT) {
-//		return micBack_output;
-//	}
-	else {
-		return NULL;
-	}
-}
-
-
-
 /*======================================================================================*/
 /* 									 NEW FUNCTIONS										*/
 /*======================================================================================*/

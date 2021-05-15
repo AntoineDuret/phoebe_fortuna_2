@@ -36,8 +36,6 @@ typedef enum {
 
 void process_audio_data(int16_t *data, uint16_t num_samples);
 void doFFT_optimized(uint16_t size, float* complex_buffer);
-float* get_audio_buffer_ptr(BUFFER_NAME_t name);
-
 
 /*======================================================================================*/
 /* 								NEW FUNCTIONS DEFINED									*/
