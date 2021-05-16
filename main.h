@@ -20,6 +20,14 @@ extern "C" {
 // This delay is given by: 		delay = (PLAYER_SELECT_DELAY*0.1) [s]	(see game_setting function)
 #define	PLAYER_SELECT_DELAY		17
 
+// List of the RGB LED colors
+#define		NO_LIGHT		  0,   0,   0
+#define		BLUE			  0,   0, 100
+#define		PINK			100,   0, 100
+#define		LIGHT_BLUE		  0, 100, 100
+#define		YELLOW			100, 100,   0
+#define		ORANGE			100,  30,   0
+
 // List of the RGB LED configurations
 typedef enum {
 	FULL,
@@ -27,14 +35,6 @@ typedef enum {
 	DIAG,
 	NUM_RGB_CONF,
 } led_conf_name_t;
-
-// List of the RGB LED colors
-#define		NO_LIGHT			  0,   0,   0
-#define		BLUE				  0,   0, 100
-#define		PINK				100,   0, 100
-#define		LIGHT_BLUE			  0, 100, 100
-#define		YELLOW				100, 100,   0
-#define		ORANGE				100,  30,   0
 
 
 /*======================================================================================*/

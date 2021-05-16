@@ -1,8 +1,8 @@
 /*
   \file   	main.c
   \author 	Antoine Duret & Carla Schmid (Group G08)
-  \date   	14.05.2021
-  \version	3.1
+  \date   	16.05.2021
+  \version	3.3
   \brief  	Main functions and LED management
 */
 
@@ -27,7 +27,6 @@
 #include "memory_protection.h"
 #include "sensors/proximity.h"
 #include "sensors/VL53L0X/VL53L0X.h"
-
 #include "leds.h"
 #include "motors.h"
 #include "msgbus/messagebus.h"
@@ -43,6 +42,10 @@ parameter_namespace_t parameter_root, aseba_ns;
 
 
 int main(void) {
+	uint8_t nbPlayers = 0;
+    uint8_t currentPlayer = 0;
+    uint tabPlayers[NB_PLAYERS_MAX];
+
 	// System initialization
     halInit();
     chSysInit();
@@ -53,19 +56,15 @@ int main(void) {
 
     // Peripherals initialization
     clear_leds();
-	dcmi_start();				// camera
-	po8030_start();				// camera
-	motors_init();				// motors
-	proximity_start();			// IR proximity detection
+	dcmi_start();					// camera
+	po8030_start();					// camera
+	motors_init();
+	proximity_start();				// IR proximity sensors
 	obstacle_det_start();
 	spi_comm_start();
-	VL53L0X_start();			// ToF init
-	mic_start(&process_audio_data);
+	VL53L0X_start();				// ToF init
+	mic_start(&process_audio_data); // starts the microphones processing thread
     process_image_start();
-
-    uint8_t nbPlayers = 0;
-    uint8_t currentPlayer = 0;
-    uint tabPlayers[NB_PLAYERS_MAX];
 
     /* Infinite loop. */
     while(1) {
@@ -74,20 +73,22 @@ int main(void) {
 
     	while(currentPlayer != 0) {
     		currentPlayer--;
+
     		player_voice_config();
     		tabPlayers[currentPlayer] = game_running();
+
     		set_body_led(1);
 
     		if(currentPlayer > 0) {
     			return_to_start_line();
 
-    			// Wait till next player is ready.
+    			// Wait till next player is ready
     			do {
     				chThdSleepMilliseconds(150);
     				led_selector_management(get_selector());
     			} while(get_selector() != currentPlayer);
 
-    			// Confirm selector state.
+    			// Confirm selector state
     			body_led_confirm();
 
     		} else { // Display the winner!
@@ -105,7 +106,7 @@ int main(void) {
 
     	chThdSleepSeconds(3);
 
-    	// Wait till next game is started.
+    	// Wait till next game is started
     	while(get_selector() != 0) {
     		chThdSleepMilliseconds(100);
     	}
@@ -122,7 +123,7 @@ int main(void) {
 uint8_t game_setting(void) {
 	uint8_t selectorState = 0, i = 0;
 
-	// Waiting for the user to turn the game setting ON (Selector on position 0).
+	// Waiting for the user to turn the game setting ON (Selector on position 0)
 	while(get_selector() != 0) {
 		set_led(LED1, 2);
 		set_led(LED3, 2);
@@ -138,14 +139,14 @@ uint8_t game_setting(void) {
 		set_led(LED7, 0);
 	}
 
-	// Ready to start the player configuration and selector management.
+	// Ready to start the player configuration and selector management
 	set_body_led(1);
 
-	// Wait for the user to select the number of players.
+	// Wait for the user to select the number of players
 	do {
 		selectorState = get_selector();
 
-		// Refreshes the LEDs and waits till selector doesn't change anymore.
+		// Refreshes the LEDs and waits till selector doesn't change anymore
 		do {
 			led_selector_management(get_selector());
 			chThdSleepMilliseconds(150);
@@ -289,9 +290,9 @@ void led_selector_management(int selectorPos) {
 *
 *	params :
 *	led_conf_name_t ledConf		one of the three RGB LED configurations defined
-*	uint8_t red_i					*
-*	uint8_t green_i					* values corresponding with one of the five RGB colors defined
-*	uint8_t blue_i					*
+*	uint8_t red_i				*
+*	uint8_t green_i				* values corresponding with one of the five RGB colors defined
+*	uint8_t blue_i				*
 */
 void set_player_led_configuration(led_conf_name_t ledConf,
 										uint8_t red_i, uint8_t green_i, uint8_t blue_i) {

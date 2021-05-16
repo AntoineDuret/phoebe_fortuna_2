@@ -1,8 +1,8 @@
 /*
   \file   	audio_processing.c
   \author 	Antoine Duret & Carla Schmid (Group G08)
-  \date   	13.05.2021
-  \version	2.1
+  \date   	16.05.2021
+  \version	2.2
   \brief  	Code for audio processing related tasks
 */
 
@@ -147,8 +147,8 @@ void doFFT_optimized(uint16_t size, float* complex_buffer) {
 *	Function defined to do the voice calibration for each player before their game.
 *
 *	params :
-*	float* data			pointer to an array containing the computed magnitude of the cpx numbers
-*						for one mic
+*	float* data			pointer to an array containing the computed average magnitude of the cpx
+*						numbers for four mics
 */
 void player_voice_calibration(float* data) {
 	uint16_t max_norm = MIN_VALUE_THRESHOLD;
@@ -188,8 +188,8 @@ void player_voice_calibration(float* data) {
 *	command depending on it. PID control for fine audio command.
 *
 *	params :
-*	float* data			pointer to an array containing the computed magnitude of the cpx numbers
-*						for one mic
+*	float* data			pointer to an array containing the computed average magnitude of the cpx
+*						numbers for four mics
 */
 void sound_remote(float* data) {
 	int16_t error = 0, max_norm_index = -1, deriv_error = 0;
@@ -206,7 +206,8 @@ void sound_remote(float* data) {
 	}
 
 	// PID regulator implementation on the speed for fine audio control.
-	// Error determined by the difference between the mid_freq (voice calibration) and the control frequency.
+	// Error determined by the difference between the mid_freq (voice calibration)
+	// and the control frequency.
 	if((max_norm_index == -1) || (audio_command == FALSE)) {
 		left_motor_set_speed(0);
 		right_motor_set_speed(0);

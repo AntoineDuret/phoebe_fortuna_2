@@ -1,8 +1,8 @@
 /*
   \file   	process_image.c
   \author 	Antoine Duret & Carla Schmid (Group G08)
-  \date   	13.05.2021
-  \version	2.0
+  \date   	16.05.2021
+  \version	4.0
   \brief  	Code for image processing related tasks
 */
 
@@ -24,20 +24,21 @@
 #include "sensors/VL53L0X/VL53L0X.h"
 #include "motors.h"
 
+
 static bool linesFound = FALSE;
 static bool goalDetection = FALSE;
 
-// Semaphore
-static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be resolved")
 
 /*======================================================================================*/
 /* 						 	     REUSED CODE FROM THE TP4 				    			*/
 /* 						  (with small additions and corrections)						*/
 /*======================================================================================*/
 
+// Semaphore
+static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be resolved")
+
 static THD_WORKING_AREA(waCaptureImage, 256);
 static THD_FUNCTION(CaptureImage, arg) {
-
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
@@ -63,7 +64,6 @@ static THD_FUNCTION(CaptureImage, arg) {
 
 static THD_WORKING_AREA(waProcessImage, 2048);
 static THD_FUNCTION(ProcessImage, arg) {
-
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
@@ -106,6 +106,7 @@ void detect_line(uint8_t *buffer) {
 	for(uint32_t i = 0 ; i < IMAGE_BUFFER_SIZE ; i++) {
 		mean += buffer[i];
 	}
+
 	mean /= IMAGE_BUFFER_SIZE;
 
 	for(i = 0; i < IMAGE_BUFFER_SIZE ; i++) {
@@ -119,7 +120,7 @@ void detect_line(uint8_t *buffer) {
 					stop = 1;
 				}
 
-				i++;//+= WIDTH_SLOPE;
+				i++;
 			}
 
 			// If begin was found, search for an end.
@@ -135,10 +136,10 @@ void detect_line(uint8_t *buffer) {
 					i++;
 				}
 
-				if((i >= IMAGE_BUFFER_SIZE) || !end) { 	// If no end was found
+				if((i >= IMAGE_BUFFER_SIZE) || !end) { 	// if no end was found
 					lineNotFound = 1;
 				}
-			} else {									// If no begin was found
+			} else {									// if no begin was found
 				lineNotFound = 1;
 			}
 
@@ -164,6 +165,7 @@ void detect_line(uint8_t *buffer) {
 	}
 }
 
+
 /*======================================================================================*/
 /* 									 NEW FUNCTIONS										*/
 /*======================================================================================*/
@@ -184,7 +186,6 @@ bool verify_finish_line(void) {
 
 				left_motor_set_speed(0);
 				right_motor_set_speed(0);
-
 			}
 		}
 	}
@@ -221,7 +222,7 @@ void return_to_start_line(void) {
 	go_forward_cm(2);
 	turn_left_degrees(50);
 
-	// Goes through hallway till detects lines.
+	// Goes through hallway till detects lines
 	time = chVTGetSystemTime();
 	while ((linesFound == FALSE) || (VL53L0X_get_dist_mm() > RETURN_LINE_DETECTION_DISTANCE) ||
 		   ((chVTGetSystemTime() - time) < MINIMAL_TIME_RETURN)) {
@@ -230,13 +231,13 @@ void return_to_start_line(void) {
 		rightSpeed = MOTOR_SPEED_LIMIT - proxValues.delta[7]*3 - 2*proxValues.delta[6];
 		right_motor_set_speed(rightSpeed);
 		left_motor_set_speed(leftSpeed);
-		chThdSleepUntilWindowed(time, time + MS2ST(15)); // Refresh @ 100 Hz.
+		chThdSleepUntilWindowed(time, time + MS2ST(15)); // refresh @ 100 Hz
 	}
 
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
 
-	// Goes to starting position.
+	// Goes to starting position
 	go_forward_cm(7);
 	turn_right_degrees(77);
 	go_forward_cm(28);
@@ -257,7 +258,7 @@ void turn_right_degrees(uint8_t degrees) {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	left_motor_set_speed(  GAME_SPEED/2);
+	left_motor_set_speed(GAME_SPEED/2);
 	right_motor_set_speed(-GAME_SPEED/2);
 
 	while(abs(right_motor_get_pos()) <=
