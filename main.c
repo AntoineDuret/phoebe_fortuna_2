@@ -74,50 +74,46 @@ int main(void) {
 
     /* Infinite loop. */
     while(1) {
-        if(nbPlayers == 0) {
-        	nbPlayers = game_setting();
-        	currentPlayer = nbPlayers;
+    	nbPlayers = game_setting();
+    	currentPlayer = nbPlayers;
 
-        	while(currentPlayer != 0) {
-        		currentPlayer--;
-        		player_voice_config();
-        		tabPlayers[currentPlayer] = game_running();
-        		set_body_led(1);
+    	while(currentPlayer != 0) {
+    		currentPlayer--;
+    		player_voice_config();
+    		tabPlayers[currentPlayer] = game_running();
+    		set_body_led(1);
 
-        		if(currentPlayer > 0) {
-        			return_to_start_line();
+    		if(currentPlayer > 0) {
+    			return_to_start_line();
 
-        			// Wait till next player is ready.
-        			do {
-        				chThdSleepMilliseconds(150);
-        				led_selector_management(get_selector());
-        			} while(get_selector() != currentPlayer);
+    			// Wait till next player is ready.
+    			do {
+    				chThdSleepMilliseconds(150);
+    				led_selector_management(get_selector());
+    			} while(get_selector() != currentPlayer);
 
-        			// Confirm selector state.
-        			body_led_confirm();
+    			// Confirm selector state.
+    			body_led_confirm();
 
-        		} else { // Display the winner!
-        			for(uint8_t i = 1; i < nbPlayers; i++) {
-        				if(tabPlayers[i] < tabPlayers[currentPlayer]) {
-        					currentPlayer = i;
-        				}
-        			}
+    		} else { // Display the winner!
+    			for(uint8_t i = 1; i < nbPlayers; i++) {
+    				if(tabPlayers[i] < tabPlayers[currentPlayer]) {
+    					currentPlayer = i;
+    				}
+    			}
 
-        			led_selector_management(currentPlayer + 1);
-        			set_body_led(1);
-        			currentPlayer = 0;
-        		}
-        	}
-        }
+    			led_selector_management(currentPlayer + 1);
+    			set_body_led(1);
+    			currentPlayer = 0;
+    		}
+    	}
 
-        chThdSleepSeconds(3);
+    	chThdSleepSeconds(3);
 
-        // Wait till next game is started.
-        while(get_selector() != 0) {
-        	chThdSleepMilliseconds(100);
-        }
-
-        nbPlayers = 0;
+    	// Wait till next game is started.
+    	while(get_selector() != 0) {
+    		chThdSleepMilliseconds(100);
+    	}
     }
 }
 
