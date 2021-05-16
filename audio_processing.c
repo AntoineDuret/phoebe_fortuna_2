@@ -25,9 +25,6 @@
 /* 						    (with small additions and changes)							*/
 /*======================================================================================*/
 
-// Semaphore
-static BSEMAPHORE_DECL(sendToComputer_sem, TRUE); // @suppress("Field cannot be resolved")
-
 // 2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
 static float micRight_cmplx_input[2 * FFT_SIZE];

@@ -5,11 +5,13 @@
 extern "C" {
 #endif
 
+
 #include <arm_math.h>
 
 #include "camera/dcmi_camera.h"
 #include "msgbus/messagebus.h"
 #include "parameter/parameter.h"
+
 
 // The game can be played with 1 to 15 players
 #define	NB_PLAYERS_MAX			15

@@ -1,7 +1,6 @@
 #ifndef PROCESS_IMAGE_H
 #define PROCESS_IMAGE_H
 
-#include <stdbool.h>
 
 // Parameters for line detection with embedded camera
 #define IMAGE_BUFFER_SIZE		640
