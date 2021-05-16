@@ -1,7 +1,6 @@
 #ifndef PROXIMITY_SENSORS_H
 #define PROXIMITY_SENSORS_H
 
-//#include <stdbool.h>
 
 #define MIN_DIST_OBST		950			// Experimental value
 

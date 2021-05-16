@@ -16,7 +16,6 @@
 #include "ch.h"
 #include "chprintf.h"
 #include "hal.h"
-//#include "shell.h"
 
 #include "audio_processing.h"
 #include "main.h"
@@ -35,11 +34,7 @@
 #include "parameter/parameter.h"
 #include "spi_comm.h"
 #include "selector.h"
-//#include "usbcfg.h"
-//#include "uc_usage.h"
 
-
-#define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
 
 messagebus_t bus;
 MUTEX_DECL(bus_lock); // @suppress("Field cannot be resolved")
