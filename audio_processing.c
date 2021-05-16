@@ -11,17 +11,13 @@
 #include <stdbool.h>
 
 #include "ch.h"
-#include "chprintf.h"
 #include "hal.h"
 
 #include "audio_processing.h"
 #include "main.h"
-#include "process_image.h"
-#include "proximity_sensors.h"
 
 #include "audio/microphone.h"
 #include "motors.h"
-#include "usbcfg.h"
 
 
 /*======================================================================================*/
